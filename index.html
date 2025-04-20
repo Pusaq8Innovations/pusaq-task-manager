@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pusaq Task Manager</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 2rem;
+      background: #f9f9f9;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .task-form, table {
+      max-width: 800px;
+      margin: 0 auto 2rem auto;
+      background: #fff;
+      padding: 1rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .task-form input, .task-form select {
+      margin: 0.5rem 0;
+      padding: 0.5rem;
+      width: 100%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    th {
+      background-color: #333;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+    .done {
+      text-decoration: line-through;
+      color: green;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Pusaq Task Manager</h1>
+
+  <div class="task-form">
+    <input type="text" id="title" placeholder="Task Title" required />
+    <input type="text" id="assigned" placeholder="Assigned To" required />
+    <input type="date" id="startDate" required />
+    <input type="date" id="deadline" required />
+    <select id="priority">
+      <option>Low</option>
+      <option>Medium</option>
+      <option>High</option>
+      <option>Urgent</option>
+    </select>
+    <select id="status">
+      <option>Not Started</option>
+      <option>In Progress</option>
+      <option>Blocked</option>
+      <option>Done</option>
+    </select>
+    <input type="number" id="progress" placeholder="Progress (%)" min="0" max="100" />
+    <input type="text" id="project" placeholder="Project Name" />
+    <input type="text" id="notes" placeholder="Notes or Links" />
+    <button onclick="addTask()">Add Task</button>
+  </div>
+
+  <table id="taskTable">
+    <thead>
+      <tr>
+        <th>Task</th>
+        <th>Assigned</th>
+        <th>Start</th>
+        <th>Deadline</th>
+        <th>Priority</th>
+        <th>Status</th>
+        <th>Progress</th>
+        <th>Project</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    function addTask() {
+      const title = document.getElementById("title").value;
+      const assigned = document.getElementById("assigned").value;
+      const start = document.getElementById("startDate").value;
+      const deadline = document.getElementById("deadline").value;
+      const priority = document.getElementById("priority").value;
+      const status = document.getElementById("status").value;
+      const progress = document.getElementById("progress").value;
+      const project = document.getElementById("project").value;
+      const notes = document.getElementById("notes").value;
+
+      const table = document.getElementById("taskTable").getElementsByTagName('tbody')[0];
+      const row = table.insertRow();
+
+      const data = [title, assigned, start, deadline, priority, status, progress + "%", project, notes];
+
+      data.forEach((item, i) => {
+        const cell = row.insertCell(i);
+        cell.innerText = item;
+        if (status === "Done") {
+          cell.classList.add("done");
+        }
+      });
+
+      // Clear form
+      document.querySelectorAll('.task-form input').forEach(i => i.value = "");
+      document.getElementById("status").value = "Not Started";
+      document.getElementById("priority").value = "Low";
+    }
+  </script>
+
+</body>
+</html>
