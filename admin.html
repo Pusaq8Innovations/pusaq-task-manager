@@ -1,91 +1,110 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Pusaq Admin Dashboard</title>
   <style>
     body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f4f4f4;
       margin: 0;
-      padding: 2rem;
+      font-family: 'Montserrat', sans-serif;
+      background-color: #0271ff;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .topbar img {
+      height: 40px;
+    }
+
+    .topbar .nav-links a {
+      color: #0271ff;
+      margin-left: 1rem;
+      font-weight: bold;
+      text-decoration: none;
     }
 
     h1 {
-      color: #0053A6;
       text-align: center;
-    }
-
-    .top-right {
-      text-align: right;
-      margin-bottom: 1rem;
-    }
-
-    .top-right a {
-      background-color: #0053A6;
       color: white;
-      padding: 10px 16px;
-      text-decoration: none;
-      border-radius: 6px;
-      font-size: 14px;
+      margin-top: 2rem;
     }
 
-    .form-container, .project-table {
-      max-width: 1000px;
+    .container {
+      max-width: 1100px;
       margin: 2rem auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .card {
       background: white;
-      padding: 1.5rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      color: #0271ff;
     }
 
     input, select, textarea, button {
-      padding: 0.5rem;
-      margin: 0.5rem 0;
       width: 100%;
-      font-size: 1rem;
-      border-radius: 5px;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
       border: 1px solid #ccc;
+      font-size: 1rem;
     }
 
     button {
-      background-color: #0053A6;
+      background-color: #0271ff;
       color: white;
+      font-weight: bold;
       border: none;
       cursor: pointer;
+      transition: background 0.2s;
     }
 
     button:hover {
-      background-color: #003d7a;
+      background-color: #005cd4;
     }
 
     table {
       width: 100%;
-      border-collapse: collapse;
       margin-top: 1rem;
+      border-collapse: collapse;
     }
 
     th, td {
-      padding: 0.75rem;
-      border: 1px solid #ddd;
       text-align: center;
+      padding: 12px;
+      border-bottom: 1px solid #eee;
     }
 
     th {
-      background-color: #0053A6;
+      background-color: #0271ff;
       color: white;
     }
 
     .progress-bar {
-      height: 12px;
-      border-radius: 5px;
+      height: 10px;
       background-color: #ddd;
+      border-radius: 5px;
       overflow: hidden;
     }
 
     .progress-fill {
       height: 100%;
-      background-color: #0053A6;
+      background-color: #0271ff;
       width: 0%;
       transition: width 0.4s;
     }
@@ -97,82 +116,76 @@
 </head>
 <body>
 
- <div class="top-right">
-  <a href="admin-calendar.html">📅 List View</a>
-  <a href="admin-calendar-grid.html">📅 Grid View</a>
-  <a href="profile.html" id="profileBtn">👤 Profile</a>
-</div>
-  
-  <h1>📊 Pusaq Project Manager (Admin)</h1>
-
-  <!-- Project Creation -->
-  <div class="form-container">
-    <h2>Create New Project</h2>
-    <input type="text" id="projectName" placeholder="Project Title" />
-    <textarea id="projectDesc" placeholder="Project Description"></textarea>
-    <button onclick="addProject()">Add Project</button>
+  <div class="topbar">
+    <img src="https://via.placeholder.com/150x40?text=Pusaq+Logo" alt="Pusaq Logo" />
+    <div class="nav-links">
+      <a href="admin-calendar-grid.html">📅 Grid View</a>
+      <a href="admin-calendar.html">🗓 List View</a>
+      <a href="profile.html">👤 Profile</a>
+    </div>
   </div>
 
-  <!-- Task Creation -->
-  <div class="form-container">
-    <h2>Create New Task</h2>
-    <select id="taskProject">
-      <option value="">Select Project</option>
-    </select>
-    <input type="text" id="taskTitle" placeholder="Task Title" />
-    <select id="assignedTo">
-      <option value="">Assign to...</option>
-      <option>Ari</option>
-      <option>Issy</option>
-      <option>Vicho</option>
-      <option>Tania</option>
-      <option>Andres</option>
-    </select>
-    <input type="date" id="deadline" />
-    <select id="status">
-      <option>Not Started</option>
-      <option>In Progress</option>
-      <option>Blocked</option>
-      <option>Done</option>
-    </select>
-    <input type="number" id="progress" placeholder="Progress (%)" min="0" max="100" />
-    <button onclick="addTask()">Add Task</button>
-  </div>
+  <h1>📊 Pusaq Project Manager</h1>
 
-  <!-- Project Filter -->
-  <div class="form-container">
-    <h2>Project View</h2>
-    <div class="filter-box">
-      <label>Filter by project:</label>
-      <select id="filterProject" onchange="renderTasks()">
-        <option value="">All Projects</option>
-      </select>
+  <div class="container">
+    <!-- Project creation -->
+    <div class="card">
+      <h2>Create New Project</h2>
+      <input type="text" id="projectName" placeholder="Project Title" />
+      <textarea id="projectDesc" placeholder="Project Description"></textarea>
+      <button onclick="addProject()">Add Project</button>
     </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Project</th>
-          <th>Task</th>
-          <th>Assigned</th>
-          <th>Deadline</th>
-          <th>Status</th>
-          <th>Progress</th>
-        </tr>
-      </thead>
-      <tbody id="taskTableBody"></tbody>
-    </table>
+    <!-- Task creation -->
+    <div class="card">
+      <h2>Create New Task</h2>
+      <select id="taskProject"></select>
+      <input type="text" id="taskTitle" placeholder="Task Title" />
+      <select id="assignedTo">
+        <option value="">Assign to...</option>
+        <option>Ari</option>
+        <option>Issy</option>
+        <option>Vicho</option>
+        <option>Tania</option>
+        <option>Andres</option>
+      </select>
+      <input type="date" id="deadline" />
+      <select id="status">
+        <option>Not Started</option>
+        <option>In Progress</option>
+        <option>Blocked</option>
+        <option>Done</option>
+      </select>
+      <input type="number" id="progress" placeholder="Progress (%)" min="0" max="100" />
+      <button onclick="addTask()">Add Task</button>
+    </div>
+
+    <!-- Task overview -->
+    <div class="card">
+      <h2>All Tasks</h2>
+      <div class="filter-box">
+        <label for="filterProject">Filter by project:</label>
+        <select id="filterProject" onchange="renderTasks()"></select>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Project</th>
+            <th>Task</th>
+            <th>Assigned</th>
+            <th>Deadline</th>
+            <th>Status</th>
+            <th>Progress</th>
+          </tr>
+        </thead>
+        <tbody id="taskTableBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <script>
     const projects = JSON.parse(localStorage.getItem("projects")) || [];
     const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    const currentUser = sessionStorage.getItem("currentUser");
-
-    // Inject profile name
-    if (currentUser) {
-      document.getElementById("profileBtn").innerText = `👤 ${currentUser}`;
-    }
 
     function saveData() {
       localStorage.setItem("projects", JSON.stringify(projects));
@@ -192,15 +205,14 @@
     }
 
     function updateProjectDropdowns() {
-      const select1 = document.getElementById("taskProject");
-      const select2 = document.getElementById("filterProject");
-      [select1, select2].forEach(select => {
-        select.innerHTML = '<option value="">Select Project</option>';
+      const selects = [document.getElementById("taskProject"), document.getElementById("filterProject")];
+      selects.forEach(select => {
+        select.innerHTML = '<option value="">All Projects</option>';
         projects.forEach(p => {
-          const option = document.createElement("option");
-          option.value = p.name;
-          option.innerText = p.name;
-          select.appendChild(option);
+          const opt = document.createElement("option");
+          opt.value = p.name;
+          opt.textContent = p.name;
+          select.appendChild(opt);
         });
       });
     }
@@ -222,6 +234,7 @@
       saveData();
       renderTasks();
 
+      // Reset form
       document.getElementById("taskTitle").value = "";
       document.getElementById("assignedTo").value = "";
       document.getElementById("deadline").value = "";
@@ -238,6 +251,7 @@
         .filter(t => !filter || t.project === filter)
         .forEach(task => {
           const row = document.createElement("tr");
+
           row.innerHTML = `
             <td>${task.project}</td>
             <td>${task.title}</td>
