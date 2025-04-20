@@ -1,10 +1,179 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Team Dashboard</title>
+  <meta charset="UTF-8">
+  <title>Pusaq Admin Dashboard</title>
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h1 {
+      color: #0053A6;
+      text-align: center;
+    }
+
+    .form-container, .project-table {
+      max-width: 1000px;
+      margin: 2rem auto;
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    input, select, button {
+      padding: 0.5rem;
+      margin: 0.5rem 0;
+      width: 100%;
+      font-size: 1rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #0053A6;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #003d7a;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background-color: #0053A6;
+      color: white;
+    }
+
+    .progress-bar {
+      height: 12px;
+      border-radius: 5px;
+      background-color: #ddd;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: #0053A6;
+      width: 0%;
+      transition: width 0.4s;
+    }
+  </style>
 </head>
 <body>
-  <h1>Welcome to your dashboard!</h1>
-  <p>This is where you’ll see and manage your assigned tasks.</p>
+
+  <h1>📊 Pusaq Super Admin Dashboard</h1>
+
+  <div class="form-container">
+    <h2>Create New Task</h2>
+    <input type="text" id="taskTitle" placeholder="Task title" required />
+    <select id="assignedTo">
+      <option value="">Assign to...</option>
+      <option>Ari</option>
+      <option>Issy</option>
+      <option>Vicho</option>
+      <option>Tania</option>
+      <option>Andres</option>
+    </select>
+    <input type="date" id="deadline" />
+    <select id="status">
+      <option>Not Started</option>
+      <option>In Progress</option>
+      <option>Blocked</option>
+      <option>Done</option>
+    </select>
+    <input type="number" id="progress" placeholder="Progress (%)" min="0" max="100" />
+    <button onclick="addTask()">Add Task</button>
+  </div>
+
+  <div class="project-table">
+    <h2>All Tasks</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Assigned</th>
+          <th>Deadline</th>
+          <th>Status</th>
+          <th>Progress</th>
+        </tr>
+      </thead>
+      <tbody id="taskTableBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+    function saveTasks() {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+    }
+
+    function renderTasks() {
+      const tbody = document.getElementById("taskTableBody");
+      tbody.innerHTML = "";
+      tasks.forEach((task, index) => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${task.title}</td>
+          <td>${task.assignedTo}</td>
+          <td>${task.deadline}</td>
+          <td>${task.status}</td>
+          <td>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${task.progress}%;"></div>
+            </div>
+            <small>${task.progress}%</small>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function addTask() {
+      const title = document.getElementById("taskTitle").value;
+      const assignedTo = document.getElementById("assignedTo").value;
+      const deadline = document.getElementById("deadline").value;
+      const status = document.getElementById("status").value;
+      const progress = parseInt(document.getElementById("progress").value) || 0;
+
+      if (!title || !assignedTo || !deadline) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      tasks.push({ title, assignedTo, deadline, status, progress });
+      saveTasks();
+      renderTasks();
+
+      // Clear form
+      document.getElementById("taskTitle").value = "";
+      document.getElementById("assignedTo").value = "";
+      document.getElementById("deadline").value = "";
+      document.getElementById("status").value = "Not Started";
+      document.getElementById("progress").value = "";
+    }
+
+    renderTasks();
+  </script>
+
 </body>
 </html>
