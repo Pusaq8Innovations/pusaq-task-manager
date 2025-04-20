@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pusaq Admin Calendar</title>
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f5f5f5;
+      padding: 2rem;
+      margin: 0;
+    }
+
+    h1 {
+      color: #0053A6;
+      text-align: center;
+    }
+
+    .top-right {
+      text-align: right;
+      margin-bottom: 1rem;
+    }
+
+    .top-right a {
+      background-color: #0053A6;
+      color: white;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .calendar-table {
+      max-width: 1000px;
+      margin: 2rem auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background-color: #0053A6;
+      color: white;
+    }
+
+    .status-Done {
+      color: green;
+    }
+
+    .status-Blocked {
+      color: red;
+    }
+
+    .status-In\ Progress {
+      color: #007bff;
+    }
+
+    .status-Not\ Started {
+      color: gray;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-right">
+    <a href="admin.html">⬅ Back to Admin Dashboard</a>
+  </div>
+
+  <h1>📅 Admin Calendar Overview</h1>
+
+  <div class="calendar-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Deadline</th>
+          <th>Task</th>
+          <th>Project</th>
+          <th>Assigned To</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="calendarBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const currentUser = sessionStorage.getItem("currentUser");
+    if (!currentUser) {
+      alert("Please log in.");
+      window.location.href = "index.html";
+    }
+
+    const profile = JSON.parse(localStorage.getItem(currentUser));
+    if (!profile || profile.role !== "admin") {
+      alert("Access denied: Admins only.");
+      window.location.href = "dashboard.html";
+    }
+
+    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    const sortedTasks = tasks
+      .filter(t => t.deadline)
+      .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+
+    const body = document.getElementById("calendarBody");
+
+    if (sortedTasks.length === 0) {
+      body.innerHTML = `<tr><td colspan="5">No upcoming tasks found.</td></tr>`;
+    } else {
+      sortedTasks.forEach(task => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${task.deadline}</td>
+          <td>${task.title}</td>
+          <td>${task.project}</td>
+          <td>${task.assignedTo}</td>
+          <td class="status-${task.status.replace(" ", "\\ ")}">${task.status}</td>
+        `;
+        body.appendChild(row);
+      });
+    }
+  </script>
+</body>
+</html>
