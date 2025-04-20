@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>My Pusaq Tasks</title>
+  <meta charset="UTF-8" />
+  <title>Pusaq Team Dashboard</title>
   <style>
     body {
       font-family: 'Montserrat', sans-serif;
@@ -16,13 +16,38 @@
       text-align: center;
     }
 
+    .top-right {
+      text-align: right;
+      margin-bottom: 1rem;
+    }
+
+    .top-right a {
+      background-color: #0053A6;
+      color: white;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
     .task-board {
-      max-width: 900px;
-      margin: 2rem auto;
+      max-width: 1000px;
+      margin: 0 auto;
       background: white;
-      padding: 1.5rem;
+      padding: 2rem;
       border-radius: 10px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .filter-box {
+      margin-bottom: 1.5rem;
+    }
+
+    select {
+      padding: 0.5rem;
+      font-size: 1rem;
+      border-radius: 6px;
+      border: 1px solid #ccc;
     }
 
     table {
@@ -67,11 +92,23 @@
 </head>
 <body>
 
-  <h1>🧠 Your Assigned Tasks</h1>
+  <div class="top-right">
+    <a href="profile.html" id="profileBtn">👤 Profile</a>
+  </div>
+
+  <h1>🧠 Your Tasks</h1>
   <div class="task-board">
+    <div class="filter-box">
+      <label>Filter by project:</label>
+      <select id="filterProject" onchange="renderTasks()">
+        <option value="">All Projects</option>
+      </select>
+    </div>
+
     <table>
       <thead>
         <tr>
+          <th>Project</th>
           <th>Task</th>
           <th>Deadline</th>
           <th>Status</th>
@@ -84,15 +121,29 @@
 
   <script>
     const currentUser = sessionStorage.getItem("currentUser");
-    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-
     if (!currentUser) {
       alert("Please log in first.");
       window.location.href = "index.html";
     }
 
+    document.getElementById("profileBtn").innerText = `👤 ${currentUser}`;
+
+    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    const projects = JSON.parse(localStorage.getItem("projects")) || [];
+
+    function updateProjectDropdown() {
+      const dropdown = document.getElementById("filterProject");
+      projects.forEach(p => {
+        const option = document.createElement("option");
+        option.value = p.name;
+        option.innerText = p.name;
+        dropdown.appendChild(option);
+      });
+    }
+
     function renderTasks() {
-      const userTasks = tasks.filter(t => t.assignedTo === currentUser);
+      const filter = document.getElementById("filterProject").value;
+      const userTasks = tasks.filter(t => t.assignedTo === currentUser && (!filter || t.project === filter));
       const tbody = document.getElementById("taskBody");
       tbody.innerHTML = "";
 
@@ -100,6 +151,7 @@
         const row = document.createElement("tr");
 
         row.innerHTML = `
+          <td>${task.project}</td>
           <td>${task.title}</td>
           <td>${task.deadline}</td>
           <td>
@@ -111,10 +163,10 @@
             </select>
           </td>
           <td>
-            <input type="number" value="${task.progress}" min="0" max="100" 
+            <input type="number" value="${task.progress}" min="0" max="100"
               onchange="updateProgress('${task.title}', this.value)" />%
             <div class="progress-bar">
-              <div class="progress-fill" style="width: ${task.progress}%;"></div>
+              <div class="progress-fill" style="width: ${task.progress}%"></div>
             </div>
           </td>
         `;
@@ -144,19 +196,8 @@
       renderTasks();
     }
 
+    updateProjectDropdown();
     renderTasks();
   </script>
-
 </body>
-  <div style="text-align: right; margin-bottom: 1rem;">
-  <a href="profile.html" style="
-    background-color: #0053A6;
-    color: white;
-    padding: 10px 16px;
-    text-decoration: none;
-    border-radius: 6px;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 14px;
-  ">👤 Profile</a>
-</div>
 </html>
