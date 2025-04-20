@@ -16,6 +16,20 @@
       text-align: center;
     }
 
+    .top-right {
+      text-align: right;
+      margin-bottom: 1rem;
+    }
+
+    .top-right a {
+      background-color: #0053A6;
+      color: white;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
     .form-container, .project-table {
       max-width: 1000px;
       margin: 2rem auto;
@@ -25,7 +39,7 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
-    input, select, button {
+    input, select, textarea, button {
       padding: 0.5rem;
       margin: 0.5rem 0;
       width: 100%;
@@ -75,15 +89,35 @@
       width: 0%;
       transition: width 0.4s;
     }
+
+    .filter-box {
+      margin-bottom: 1rem;
+    }
   </style>
 </head>
 <body>
 
-  <h1>📊 Pusaq Super Admin Dashboard</h1>
+  <div class="top-right">
+    <a href="profile.html" id="profileBtn">👤 Profile</a>
+  </div>
 
+  <h1>📊 Pusaq Project Manager (Admin)</h1>
+
+  <!-- Project Creation -->
+  <div class="form-container">
+    <h2>Create New Project</h2>
+    <input type="text" id="projectName" placeholder="Project Title" />
+    <textarea id="projectDesc" placeholder="Project Description"></textarea>
+    <button onclick="addProject()">Add Project</button>
+  </div>
+
+  <!-- Task Creation -->
   <div class="form-container">
     <h2>Create New Task</h2>
-    <input type="text" id="taskTitle" placeholder="Task title" required />
+    <select id="taskProject">
+      <option value="">Select Project</option>
+    </select>
+    <input type="text" id="taskTitle" placeholder="Task Title" />
     <select id="assignedTo">
       <option value="">Assign to...</option>
       <option>Ari</option>
@@ -103,11 +137,20 @@
     <button onclick="addTask()">Add Task</button>
   </div>
 
-  <div class="project-table">
-    <h2>All Tasks</h2>
+  <!-- Project Filter -->
+  <div class="form-container">
+    <h2>Project View</h2>
+    <div class="filter-box">
+      <label>Filter by project:</label>
+      <select id="filterProject" onchange="renderTasks()">
+        <option value="">All Projects</option>
+      </select>
+    </div>
+
     <table>
       <thead>
         <tr>
+          <th>Project</th>
           <th>Task</th>
           <th>Assigned</th>
           <th>Deadline</th>
@@ -120,51 +163,63 @@
   </div>
 
   <script>
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    const projects = JSON.parse(localStorage.getItem("projects")) || [];
+    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    const currentUser = sessionStorage.getItem("currentUser");
 
-    function saveTasks() {
+    // Inject profile name
+    if (currentUser) {
+      document.getElementById("profileBtn").innerText = `👤 ${currentUser}`;
+    }
+
+    function saveData() {
+      localStorage.setItem("projects", JSON.stringify(projects));
       localStorage.setItem("tasks", JSON.stringify(tasks));
     }
 
-    function renderTasks() {
-      const tbody = document.getElementById("taskTableBody");
-      tbody.innerHTML = "";
-      tasks.forEach((task, index) => {
-        const row = document.createElement("tr");
+    function addProject() {
+      const name = document.getElementById("projectName").value.trim();
+      const desc = document.getElementById("projectDesc").value.trim();
+      if (!name) return alert("Please enter a project name.");
+      projects.push({ name, desc });
+      saveData();
+      alert("✅ Project added!");
+      document.getElementById("projectName").value = "";
+      document.getElementById("projectDesc").value = "";
+      updateProjectDropdowns();
+    }
 
-        row.innerHTML = `
-          <td>${task.title}</td>
-          <td>${task.assignedTo}</td>
-          <td>${task.deadline}</td>
-          <td>${task.status}</td>
-          <td>
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: ${task.progress}%;"></div>
-            </div>
-            <small>${task.progress}%</small>
-          </td>
-        `;
-        tbody.appendChild(row);
+    function updateProjectDropdowns() {
+      const select1 = document.getElementById("taskProject");
+      const select2 = document.getElementById("filterProject");
+      [select1, select2].forEach(select => {
+        select.innerHTML = '<option value="">Select Project</option>';
+        projects.forEach(p => {
+          const option = document.createElement("option");
+          option.value = p.name;
+          option.innerText = p.name;
+          select.appendChild(option);
+        });
       });
     }
 
     function addTask() {
+      const project = document.getElementById("taskProject").value;
       const title = document.getElementById("taskTitle").value;
       const assignedTo = document.getElementById("assignedTo").value;
       const deadline = document.getElementById("deadline").value;
       const status = document.getElementById("status").value;
       const progress = parseInt(document.getElementById("progress").value) || 0;
 
-      if (!title || !assignedTo || !deadline) {
+      if (!project || !title || !assignedTo || !deadline) {
         alert("Please fill in all fields.");
         return;
       }
 
-      tasks.push({ title, assignedTo, deadline, status, progress });
-      saveTasks();
+      tasks.push({ project, title, assignedTo, deadline, status, progress });
+      saveData();
       renderTasks();
 
-      // Clear form
       document.getElementById("taskTitle").value = "";
       document.getElementById("assignedTo").value = "";
       document.getElementById("deadline").value = "";
@@ -172,19 +227,34 @@
       document.getElementById("progress").value = "";
     }
 
+    function renderTasks() {
+      const filter = document.getElementById("filterProject").value;
+      const tbody = document.getElementById("taskTableBody");
+      tbody.innerHTML = "";
+
+      tasks
+        .filter(t => !filter || t.project === filter)
+        .forEach(task => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${task.project}</td>
+            <td>${task.title}</td>
+            <td>${task.assignedTo}</td>
+            <td>${task.deadline}</td>
+            <td>${task.status}</td>
+            <td>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${task.progress}%"></div>
+              </div>
+              <small>${task.progress}%</small>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+    }
+
+    updateProjectDropdowns();
     renderTasks();
   </script>
-
 </body>
-  <div style="text-align: right; margin-bottom: 1rem;">
-  <a href="profile.html" style="
-    background-color: #0053A6;
-    color: white;
-    padding: 10px 16px;
-    text-decoration: none;
-    border-radius: 6px;
-    font-family: 'Montserrat', sans-serif;
-    font-size: 14px;
-  ">👤 Profile</a>
-</div>
 </html>
