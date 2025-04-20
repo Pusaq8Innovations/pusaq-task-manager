@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pusaq Profile</title>
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    h1 {
+      color: #0053A6;
+    }
+
+    .profile-box {
+      max-width: 400px;
+      margin: 2rem auto;
+      background: white;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-bottom: 1rem;
+      border: 3px solid #0053A6;
+    }
+
+    input[type="file"],
+    input[type="text"],
+    input[readonly],
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      font-size: 1rem;
+    }
+
+    input[type="file"] {
+      padding: 5px;
+    }
+
+    input,
+    input[readonly] {
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background-color: #0053A6;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #003d7a;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>👤 Your Profile</h1>
+  <div class="profile-box">
+    <img id="avatar" src="https://via.placeholder.com/100" alt="Profile" />
+    <input type="file" id="imageUpload" accept="image/*" />
+    <input type="text" id="displayName" placeholder="Your name" />
+    <input type="text" id="role" readonly />
+    <input type="text" id="password" readonly />
+    <button onclick="saveProfile()">Save Changes</button>
+    <button onclick="goToDashboard()">Go to Dashboard</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <script>
+    const currentUser = sessionStorage.getItem("currentUser");
+    if (!currentUser) {
+      alert("Please log in.");
+      window.location.href = "index.html";
+    }
+
+    let profile = JSON.parse(localStorage.getItem(currentUser));
+
+    const avatar = document.getElementById("avatar");
+    const displayName = document.getElementById("displayName");
+    const role = document.getElementById("role");
+    const password = document.getElementById("password");
+    const imageUpload = document.getElementById("imageUpload");
+
+    // Load data
+    avatar.src = profile.image || "https://via.placeholder.com/100";
+    displayName.value = profile.name || currentUser;
+    role.value = profile.role;
+    password.value = profile.password;
+
+    // Image Upload
+    imageUpload.addEventListener("change", function () {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        avatar.src = e.target.result;
+        profile.image = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function saveProfile() {
+      profile.name = displayName.value;
+      localStorage.setItem(currentUser, JSON.stringify(profile));
+      alert("✅ Profile updated!");
+      location.reload();
+    }
+
+    function goToDashboard() {
+      window.location.href = profile.role === "admin" ? "admin.html" : "dashboard.html";
+    }
+
+    function logout() {
+      sessionStorage.clear();
+      window.location.href = "index.html";
+    }
+  </script>
+
+</body>
+</html>
