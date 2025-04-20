@@ -1,10 +1,151 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Team Dashboard</title>
+  <meta charset="UTF-8">
+  <title>My Pusaq Tasks</title>
+  <style>
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h1 {
+      color: #0053A6;
+      text-align: center;
+    }
+
+    .task-board {
+      max-width: 900px;
+      margin: 2rem auto;
+      background: white;
+      padding: 1.5rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background-color: #0053A6;
+      color: white;
+    }
+
+    select, input[type="number"] {
+      width: 100%;
+      padding: 6px;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .progress-bar {
+      height: 12px;
+      background: #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: #0053A6;
+      width: 0%;
+      transition: width 0.4s;
+    }
+  </style>
 </head>
 <body>
-  <h1>Welcome to your dashboard!</h1>
-  <p>This is where you’ll see and manage your assigned tasks.</p>
+
+  <h1>🧠 Your Assigned Tasks</h1>
+  <div class="task-board">
+    <table>
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Deadline</th>
+          <th>Status</th>
+          <th>Progress</th>
+        </tr>
+      </thead>
+      <tbody id="taskBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const currentUser = sessionStorage.getItem("currentUser");
+    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+
+    if (!currentUser) {
+      alert("Please log in first.");
+      window.location.href = "index.html";
+    }
+
+    function renderTasks() {
+      const userTasks = tasks.filter(t => t.assignedTo === currentUser);
+      const tbody = document.getElementById("taskBody");
+      tbody.innerHTML = "";
+
+      userTasks.forEach((task, index) => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${task.title}</td>
+          <td>${task.deadline}</td>
+          <td>
+            <select onchange="updateStatus('${task.title}', this.value)">
+              <option ${task.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+              <option ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+              <option ${task.status === 'Blocked' ? 'selected' : ''}>Blocked</option>
+              <option ${task.status === 'Done' ? 'selected' : ''}>Done</option>
+            </select>
+          </td>
+          <td>
+            <input type="number" value="${task.progress}" min="0" max="100" 
+              onchange="updateProgress('${task.title}', this.value)" />%
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${task.progress}%;"></div>
+            </div>
+          </td>
+        `;
+
+        tbody.appendChild(row);
+      });
+    }
+
+    function updateStatus(title, status) {
+      const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
+      if (task) {
+        task.status = status;
+        saveAndRender();
+      }
+    }
+
+    function updateProgress(title, value) {
+      const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
+      if (task) {
+        task.progress = parseInt(value);
+        saveAndRender();
+      }
+    }
+
+    function saveAndRender() {
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+      renderTasks();
+    }
+
+    renderTasks();
+  </script>
+
 </body>
 </html>
