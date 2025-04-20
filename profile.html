@@ -2,83 +2,162 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Pusaq Profile</title>
+  <title>Pusaq Dashboard</title>
   <style>
     body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f5f5f5;
       margin: 0;
-      padding: 2rem;
-      text-align: center;
+      font-family: 'Montserrat', sans-serif;
+      background-color: #0271ff;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .topbar img {
+      height: 40px;
+    }
+
+    .topbar .nav-links a {
+      color: #0271ff;
+      margin-left: 1rem;
+      font-weight: bold;
+      text-decoration: none;
     }
 
     h1 {
-      color: #0053A6;
+      text-align: center;
+      color: white;
+      margin: 2rem 0 1rem;
     }
 
-    .profile-box {
-      max-width: 400px;
-      margin: 2rem auto;
+    .summary-bar {
+      max-width: 600px;
+      margin: 0 auto 1.5rem;
       background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 1rem;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
     }
 
-    img {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 1rem;
-      border: 3px solid #0053A6;
-    }
-
-    input[type="file"],
-    input[type="text"],
-    input[readonly],
-    button {
+    .progress-outer {
       width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 6px;
+      height: 16px;
+      background: #eee;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .progress-inner {
+      height: 100%;
+      background: #0271ff;
+      width: 0%;
+      transition: width 0.5s ease-in-out;
+    }
+
+    .accordion {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .card h2 {
+      margin: 0;
+      padding: 1rem 1.5rem;
+      background-color: #005cd4;
+      color: white;
+      cursor: pointer;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
+    }
+
+    .panel {
+      display: none;
+      padding: 1.5rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      padding: 0.75rem;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background-color: #eee;
+    }
+
+    select, input[type="number"], textarea {
+      width: 100%;
+      padding: 6px;
       font-size: 1rem;
-    }
-
-    input[type="file"] {
-      padding: 5px;
-    }
-
-    input,
-    input[readonly] {
+      border-radius: 4px;
       border: 1px solid #ccc;
     }
 
-    button {
-      background-color: #0053A6;
-      color: white;
-      border: none;
-      cursor: pointer;
+    .progress-bar {
+      height: 12px;
+      background: #ddd;
+      border-radius: 5px;
+      overflow: hidden;
     }
 
-    button:hover {
-      background-color: #003d7a;
+    .progress-fill {
+      height: 100%;
+      background-color: #0271ff;
+      width: 0%;
+      transition: width 0.4s;
+    }
+
+    .status-Not\ Started { color: gray; }
+    .status-In\ Progress { color: #007bff; }
+    .status-Blocked { color: red; }
+    .status-Done { color: green; }
+
+    .completed {
+      background-color: #e6ffe6;
+      text-decoration: line-through;
     }
   </style>
 </head>
 <body>
 
-  <h1>👤 Your Profile</h1>
-  <div class="profile-box">
-    <img id="avatar" src="https://via.placeholder.com/100" alt="Profile" />
-    <input type="file" id="imageUpload" accept="image/*" />
-    <input type="text" id="displayName" placeholder="Your name" />
-    <input type="text" id="role" readonly />
-    <input type="text" id="password" readonly />
-    <button onclick="saveProfile()">Save Changes</button>
-    <button onclick="goToDashboard()">Go to Dashboard</button>
-    <button onclick="logout()">Logout</button>
+  <div class="topbar">
+    <img src="https://via.placeholder.com/150x40?text=Pusaq+Logo" alt="Pusaq Logo" />
+    <div class="nav-links">
+      <a href="calendar-grid.html">📅 Calendar</a>
+      <a href="profile.html" id="profileBtn">👤 Profile</a>
+    </div>
   </div>
+
+  <h1>🧠 Your Tasks by Project</h1>
+
+  <div class="summary-bar">
+    <strong id="taskSummaryText">Loading...</strong>
+    <div class="progress-outer">
+      <div class="progress-inner" id="summaryBar"></div>
+    </div>
+  </div>
+
+  <div class="accordion" id="taskContainer"></div>
 
   <script>
     const currentUser = sessionStorage.getItem("currentUser");
@@ -87,48 +166,137 @@
       window.location.href = "index.html";
     }
 
-    let profile = JSON.parse(localStorage.getItem(currentUser));
+    document.getElementById("profileBtn").innerText = `👤 ${currentUser}`;
 
-    const avatar = document.getElementById("avatar");
-    const displayName = document.getElementById("displayName");
-    const role = document.getElementById("role");
-    const password = document.getElementById("password");
-    const imageUpload = document.getElementById("imageUpload");
+    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    const projects = JSON.parse(localStorage.getItem("projects")) || [];
+    const userTasks = tasks.filter(t => t.assignedTo === currentUser);
 
-    // Load data
-    avatar.src = profile.image || "https://via.placeholder.com/100";
-    displayName.value = profile.name || currentUser;
-    role.value = profile.role;
-    password.value = profile.password;
-
-    // Image Upload
-    imageUpload.addEventListener("change", function () {
-      const file = this.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        avatar.src = e.target.result;
-        profile.image = e.target.result;
-      };
-      reader.readAsDataURL(file);
+    const grouped = {};
+    userTasks.forEach(task => {
+      if (!grouped[task.project]) grouped[task.project] = [];
+      grouped[task.project].push(task);
     });
 
-    function saveProfile() {
-      profile.name = displayName.value;
-      localStorage.setItem(currentUser, JSON.stringify(profile));
-      alert("✅ Profile updated!");
-      location.reload();
+    function renderSummary() {
+      const total = userTasks.length;
+      const completed = userTasks.filter(t => t.status === "Done" || t.progress == 100).length;
+      const percent = total ? Math.round((completed / total) * 100) : 0;
+      document.getElementById("taskSummaryText").innerText =
+        `You’ve completed ${completed} of ${total} tasks (${percent}%)`;
+      document.getElementById("summaryBar").style.width = percent + "%";
     }
 
-    function goToDashboard() {
-      window.location.href = profile.role === "admin" ? "admin.html" : "dashboard.html";
+    const container = document.getElementById("taskContainer");
+    container.innerHTML = "";
+
+    Object.keys(grouped).forEach(project => {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const header = document.createElement("h2");
+      header.textContent = project;
+      header.onclick = () => {
+        const panel = header.nextElementSibling;
+        panel.style.display = panel.style.display === "block" ? "none" : "block";
+      };
+
+      const panel = document.createElement("div");
+      panel.className = "panel";
+
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>✓</th>
+            <th>Task</th>
+            <th>Deadline</th>
+            <th>Status</th>
+            <th>Progress</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      grouped[project].forEach(task => {
+        const row = document.createElement("tr");
+        if (task.status === "Done" || task.progress == 100) {
+          row.classList.add("completed");
+        }
+
+        const statusClass = `status-${task.status.replace(" ", "\\ ")}`;
+        row.innerHTML = `
+          <td><input type="checkbox" ${task.status === 'Done' ? 'checked' : ''} 
+               onchange="toggleComplete('${task.title}', this.checked)"></td>
+          <td>${task.title}</td>
+          <td>${task.deadline}</td>
+          <td>
+            <select class="${statusClass}" onchange="updateStatus('${task.title}', this.value)">
+              <option ${task.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+              <option ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+              <option ${task.status === 'Blocked' ? 'selected' : ''}>Blocked</option>
+              <option ${task.status === 'Done' ? 'selected' : ''}>Done</option>
+            </select>
+          </td>
+          <td>
+            <input type="number" value="${task.progress}" min="0" max="100"
+              onchange="updateProgress('${task.title}', this.value)" />%
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${task.progress}%"></div>
+            </div>
+          </td>
+          <td>
+            <textarea rows="2" onchange="updateNote('${task.title}', this.value)">${task.note || ''}</textarea>
+          </td>
+        `;
+        table.querySelector("tbody").appendChild(row);
+      });
+
+      panel.appendChild(table);
+      card.appendChild(header);
+      card.appendChild(panel);
+      container.appendChild(card);
+    });
+
+    function updateStatus(title, status) {
+      const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
+      if (task) {
+        task.status = status;
+        if (status === "Done") task.progress = 100;
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+        location.reload();
+      }
     }
 
-    function logout() {
-      sessionStorage.clear();
-      window.location.href = "index.html";
+    function toggleComplete(title, isDone) {
+      const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
+      if (task) {
+        task.status = isDone ? "Done" : "In Progress";
+        task.progress = isDone ? 100 : 50;
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+        location.reload();
+      }
     }
+
+    function updateProgress(title, value) {
+      const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
+      if (task) {
+        task.progress = parseInt(value);
+        if (task.progress >= 100) task.status = "Done";
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+      }
+    }
+
+    function updateNote(title, value) {
+      const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
+      if (task) {
+        task.note = value;
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+      }
+    }
+
+    renderSummary();
   </script>
-
 </body>
 </html>
