@@ -30,6 +30,32 @@
       font-size: 14px;
     }
 
+    .summary-bar {
+      max-width: 600px;
+      margin: 0 auto 1rem auto;
+      background: white;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .summary-bar .progress-outer {
+      width: 100%;
+      height: 16px;
+      background: #eee;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .summary-bar .progress-inner {
+      height: 100%;
+      background: #0053A6;
+      width: 0%;
+      transition: width 0.5s ease-in-out;
+    }
+
     .accordion {
       max-width: 1000px;
       margin: 1rem auto;
@@ -94,15 +120,29 @@
     .status-In\ Progress { color: #007bff; }
     .status-Blocked { color: red; }
     .status-Done { color: green; }
+
+    .completed {
+      background-color: #e6ffe6;
+      text-decoration: line-through;
+    }
   </style>
 </head>
 <body>
 
   <div class="top-right">
+    <a href="calendar.html">📅 Calendar</a>
     <a href="profile.html" id="profileBtn">👤 Profile</a>
   </div>
 
   <h1>🧠 Your Tasks by Project</h1>
+
+  <div class="summary-bar">
+    <strong id="taskSummaryText">Loading...</strong>
+    <div class="progress-outer">
+      <div class="progress-inner" id="summaryBar"></div>
+    </div>
+  </div>
+
   <div id="taskContainer"></div>
 
   <script>
@@ -116,7 +156,6 @@
 
     const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
     const projects = JSON.parse(localStorage.getItem("projects")) || [];
-
     const userTasks = tasks.filter(t => t.assignedTo === currentUser);
 
     const grouped = {};
@@ -125,7 +164,19 @@
       grouped[task.project].push(task);
     });
 
+    function renderSummary() {
+      const total = userTasks.length;
+      const completed = userTasks.filter(t => t.status === "Done" || t.progress == 100).length;
+      const percent = total ? Math.round((completed / total) * 100) : 0;
+
+      document.getElementById("taskSummaryText").innerText =
+        `You’ve completed ${completed} of ${total} tasks (${percent}%)`;
+
+      document.getElementById("summaryBar").style.width = percent + "%";
+    }
+
     const container = document.getElementById("taskContainer");
+    container.innerHTML = "";
 
     Object.keys(grouped).forEach(project => {
       const projectDiv = document.createElement("div");
@@ -145,6 +196,7 @@
       table.innerHTML = `
         <thead>
           <tr>
+            <th>✓</th>
             <th>Task</th>
             <th>Deadline</th>
             <th>Status</th>
@@ -157,10 +209,15 @@
 
       grouped[project].forEach(task => {
         const row = document.createElement("tr");
+        if (task.status === "Done" || task.progress == 100) {
+          row.classList.add("completed");
+        }
 
         const statusClass = `status-${task.status.replace(" ", "\\ ")}`;
 
         row.innerHTML = `
+          <td><input type="checkbox" ${task.status === 'Done' ? 'checked' : ''} 
+               onchange="toggleComplete('${task.title}', this.checked)"></td>
           <td>${task.title}</td>
           <td>${task.deadline}</td>
           <td>
@@ -196,6 +253,17 @@
       const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
       if (task) {
         task.status = status;
+        if (status === "Done") task.progress = 100;
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+        location.reload();
+      }
+    }
+
+    function toggleComplete(title, isDone) {
+      const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
+      if (task) {
+        task.status = isDone ? "Done" : "In Progress";
+        task.progress = isDone ? 100 : 50;
         localStorage.setItem("tasks", JSON.stringify(tasks));
         location.reload();
       }
@@ -205,6 +273,7 @@
       const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
       if (task) {
         task.progress = parseInt(value);
+        if (task.progress >= 100) task.status = "Done";
         localStorage.setItem("tasks", JSON.stringify(tasks));
       }
     }
@@ -216,6 +285,8 @@
         localStorage.setItem("tasks", JSON.stringify(tasks));
       }
     }
+
+    renderSummary();
   </script>
 </body>
 </html>
