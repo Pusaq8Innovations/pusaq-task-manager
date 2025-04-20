@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Pusaq Team Dashboard</title>
+  <meta charset="UTF-8">
+  <title>Pusaq Dashboard</title>
   <style>
     body {
       font-family: 'Montserrat', sans-serif;
-      background-color: #f9f9f9;
+      background-color: #f5f5f5;
       margin: 0;
       padding: 2rem;
     }
@@ -30,24 +30,26 @@
       font-size: 14px;
     }
 
-    .task-board {
+    .accordion {
       max-width: 1000px;
-      margin: 0 auto;
+      margin: 1rem auto;
       background: white;
-      padding: 2rem;
       border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
     }
 
-    .filter-box {
-      margin-bottom: 1.5rem;
+    .accordion h2 {
+      margin: 0;
+      padding: 1rem;
+      background-color: #0053A6;
+      color: white;
+      cursor: pointer;
     }
 
-    select {
-      padding: 0.5rem;
-      font-size: 1rem;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+    .panel {
+      display: none;
+      padding: 1rem;
     }
 
     table {
@@ -63,16 +65,15 @@
     }
 
     th {
-      background-color: #0053A6;
-      color: white;
+      background-color: #eee;
     }
 
-    select, input[type="number"] {
+    select, input[type="number"], textarea {
       width: 100%;
       padding: 6px;
       font-size: 1rem;
-      border: 1px solid #ccc;
       border-radius: 4px;
+      border: 1px solid #ccc;
     }
 
     .progress-bar {
@@ -88,6 +89,11 @@
       width: 0%;
       transition: width 0.4s;
     }
+
+    .status-Not\ Started { color: gray; }
+    .status-In\ Progress { color: #007bff; }
+    .status-Blocked { color: red; }
+    .status-Done { color: green; }
   </style>
 </head>
 <body>
@@ -96,33 +102,13 @@
     <a href="profile.html" id="profileBtn">👤 Profile</a>
   </div>
 
-  <h1>🧠 Your Tasks</h1>
-  <div class="task-board">
-    <div class="filter-box">
-      <label>Filter by project:</label>
-      <select id="filterProject" onchange="renderTasks()">
-        <option value="">All Projects</option>
-      </select>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Project</th>
-          <th>Task</th>
-          <th>Deadline</th>
-          <th>Status</th>
-          <th>Progress</th>
-        </tr>
-      </thead>
-      <tbody id="taskBody"></tbody>
-    </table>
-  </div>
+  <h1>🧠 Your Tasks by Project</h1>
+  <div id="taskContainer"></div>
 
   <script>
     const currentUser = sessionStorage.getItem("currentUser");
     if (!currentUser) {
-      alert("Please log in first.");
+      alert("Please log in.");
       window.location.href = "index.html";
     }
 
@@ -131,31 +117,54 @@
     const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
     const projects = JSON.parse(localStorage.getItem("projects")) || [];
 
-    function updateProjectDropdown() {
-      const dropdown = document.getElementById("filterProject");
-      projects.forEach(p => {
-        const option = document.createElement("option");
-        option.value = p.name;
-        option.innerText = p.name;
-        dropdown.appendChild(option);
-      });
-    }
+    const userTasks = tasks.filter(t => t.assignedTo === currentUser);
 
-    function renderTasks() {
-      const filter = document.getElementById("filterProject").value;
-      const userTasks = tasks.filter(t => t.assignedTo === currentUser && (!filter || t.project === filter));
-      const tbody = document.getElementById("taskBody");
-      tbody.innerHTML = "";
+    const grouped = {};
+    userTasks.forEach(task => {
+      if (!grouped[task.project]) grouped[task.project] = [];
+      grouped[task.project].push(task);
+    });
 
-      userTasks.forEach((task, index) => {
+    const container = document.getElementById("taskContainer");
+
+    Object.keys(grouped).forEach(project => {
+      const projectDiv = document.createElement("div");
+      projectDiv.className = "accordion";
+
+      const header = document.createElement("h2");
+      header.textContent = project;
+      header.onclick = () => {
+        const panel = header.nextElementSibling;
+        panel.style.display = panel.style.display === "block" ? "none" : "block";
+      };
+
+      const panel = document.createElement("div");
+      panel.className = "panel";
+
+      const table = document.createElement("table");
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Deadline</th>
+            <th>Status</th>
+            <th>Progress</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      `;
+
+      grouped[project].forEach(task => {
         const row = document.createElement("tr");
 
+        const statusClass = `status-${task.status.replace(" ", "\\ ")}`;
+
         row.innerHTML = `
-          <td>${task.project}</td>
           <td>${task.title}</td>
           <td>${task.deadline}</td>
           <td>
-            <select onchange="updateStatus('${task.title}', this.value)">
+            <select class="${statusClass}" onchange="updateStatus('${task.title}', this.value)">
               <option ${task.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
               <option ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
               <option ${task.status === 'Blocked' ? 'selected' : ''}>Blocked</option>
@@ -169,17 +178,26 @@
               <div class="progress-fill" style="width: ${task.progress}%"></div>
             </div>
           </td>
+          <td>
+            <textarea rows="2" onchange="updateNote('${task.title}', this.value)">${task.note || ''}</textarea>
+          </td>
         `;
 
-        tbody.appendChild(row);
+        table.querySelector("tbody").appendChild(row);
       });
-    }
+
+      panel.appendChild(table);
+      projectDiv.appendChild(header);
+      projectDiv.appendChild(panel);
+      container.appendChild(projectDiv);
+    });
 
     function updateStatus(title, status) {
       const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
       if (task) {
         task.status = status;
-        saveAndRender();
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+        location.reload();
       }
     }
 
@@ -187,17 +205,17 @@
       const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
       if (task) {
         task.progress = parseInt(value);
-        saveAndRender();
+        localStorage.setItem("tasks", JSON.stringify(tasks));
       }
     }
 
-    function saveAndRender() {
-      localStorage.setItem("tasks", JSON.stringify(tasks));
-      renderTasks();
+    function updateNote(title, value) {
+      const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
+      if (task) {
+        task.note = value;
+        localStorage.setItem("tasks", JSON.stringify(tasks));
+      }
     }
-
-    updateProjectDropdown();
-    renderTasks();
   </script>
 </body>
 </html>
