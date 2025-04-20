@@ -1,46 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Pusaq Dashboard</title>
   <style>
     body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f5f5f5;
       margin: 0;
-      padding: 2rem;
+      font-family: 'Montserrat', sans-serif;
+      background-color: #0271ff;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .topbar img {
+      height: 40px;
+    }
+
+    .topbar .nav-links a {
+      color: #0271ff;
+      margin-left: 1rem;
+      font-weight: bold;
+      text-decoration: none;
     }
 
     h1 {
-      color: #0053A6;
       text-align: center;
-    }
-
-    .top-right {
-      text-align: right;
-      margin-bottom: 1rem;
-    }
-
-    .top-right a {
-      background-color: #0053A6;
       color: white;
-      padding: 10px 16px;
-      text-decoration: none;
-      border-radius: 6px;
-      font-size: 14px;
+      margin: 2rem 0 1rem;
     }
 
     .summary-bar {
       max-width: 600px;
-      margin: 0 auto 1rem auto;
+      margin: 0 auto 1.5rem;
       background: white;
       padding: 1rem;
       border-radius: 10px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
       text-align: center;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
     }
 
-    .summary-bar .progress-outer {
+    .progress-outer {
       width: 100%;
       height: 16px;
       background: #eee;
@@ -49,33 +55,38 @@
       margin-top: 0.5rem;
     }
 
-    .summary-bar .progress-inner {
+    .progress-inner {
       height: 100%;
-      background: #0053A6;
+      background: #0271ff;
       width: 0%;
       transition: width 0.5s ease-in-out;
     }
 
     .accordion {
       max-width: 1000px;
-      margin: 1rem auto;
-      background: white;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
+      margin: 0 auto;
     }
 
-    .accordion h2 {
+    .card {
+      background: white;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .card h2 {
       margin: 0;
-      padding: 1rem;
-      background-color: #0053A6;
+      padding: 1rem 1.5rem;
+      background-color: #005cd4;
       color: white;
       cursor: pointer;
+      border-top-left-radius: 10px;
+      border-top-right-radius: 10px;
     }
 
     .panel {
       display: none;
-      padding: 1rem;
+      padding: 1.5rem;
     }
 
     table {
@@ -111,7 +122,7 @@
 
     .progress-fill {
       height: 100%;
-      background-color: #0053A6;
+      background-color: #0271ff;
       width: 0%;
       transition: width 0.4s;
     }
@@ -129,9 +140,12 @@
 </head>
 <body>
 
-  <div class="top-right">
-    <a href="calendar.html">📅 Calendar</a>
-    <a href="profile.html" id="profileBtn">👤 Profile</a>
+  <div class="topbar">
+    <img src="https://via.placeholder.com/150x40?text=Pusaq+Logo" alt="Pusaq Logo" />
+    <div class="nav-links">
+      <a href="calendar-grid.html">📅 Calendar</a>
+      <a href="profile.html" id="profileBtn">👤 Profile</a>
+    </div>
   </div>
 
   <h1>🧠 Your Tasks by Project</h1>
@@ -143,7 +157,7 @@
     </div>
   </div>
 
-  <div id="taskContainer"></div>
+  <div class="accordion" id="taskContainer"></div>
 
   <script>
     const currentUser = sessionStorage.getItem("currentUser");
@@ -168,10 +182,8 @@
       const total = userTasks.length;
       const completed = userTasks.filter(t => t.status === "Done" || t.progress == 100).length;
       const percent = total ? Math.round((completed / total) * 100) : 0;
-
       document.getElementById("taskSummaryText").innerText =
         `You’ve completed ${completed} of ${total} tasks (${percent}%)`;
-
       document.getElementById("summaryBar").style.width = percent + "%";
     }
 
@@ -179,8 +191,8 @@
     container.innerHTML = "";
 
     Object.keys(grouped).forEach(project => {
-      const projectDiv = document.createElement("div");
-      projectDiv.className = "accordion";
+      const card = document.createElement("div");
+      card.className = "card";
 
       const header = document.createElement("h2");
       header.textContent = project;
@@ -214,7 +226,6 @@
         }
 
         const statusClass = `status-${task.status.replace(" ", "\\ ")}`;
-
         row.innerHTML = `
           <td><input type="checkbox" ${task.status === 'Done' ? 'checked' : ''} 
                onchange="toggleComplete('${task.title}', this.checked)"></td>
@@ -239,14 +250,13 @@
             <textarea rows="2" onchange="updateNote('${task.title}', this.value)">${task.note || ''}</textarea>
           </td>
         `;
-
         table.querySelector("tbody").appendChild(row);
       });
 
       panel.appendChild(table);
-      projectDiv.appendChild(header);
-      projectDiv.appendChild(panel);
-      container.appendChild(projectDiv);
+      card.appendChild(header);
+      card.appendChild(panel);
+      container.appendChild(card);
     });
 
     function updateStatus(title, status) {
