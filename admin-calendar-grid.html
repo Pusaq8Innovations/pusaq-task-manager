@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Pusaq Admin Calendar Grid</title>
   <style>
     body {
@@ -16,18 +16,39 @@
       color: #0053A6;
     }
 
-    .top-right {
-      text-align: right;
-      margin-bottom: 1rem;
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      max-width: 1000px;
+      margin: 0 auto 1rem auto;
     }
 
-    .top-right a {
+    .filters {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .filters select {
+      padding: 6px 10px;
+      font-size: 14px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .nav-buttons button {
       background-color: #0053A6;
       color: white;
-      padding: 10px 16px;
-      text-decoration: none;
-      border-radius: 6px;
-      font-size: 14px;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 5px;
+      cursor: pointer;
     }
 
     .calendar {
@@ -46,6 +67,7 @@
       box-shadow: 0 1px 4px rgba(0,0,0,0.1);
       display: flex;
       flex-direction: column;
+      position: relative;
     }
 
     .day .date {
@@ -60,12 +82,34 @@
       border-radius: 4px;
       color: white;
       word-break: break-word;
+      cursor: default;
+      position: relative;
     }
 
     .status-Done { background-color: green; }
     .status-In\ Progress { background-color: #007bff; }
     .status-Blocked { background-color: red; }
     .status-Not\ Started { background-color: gray; }
+
+    .tooltip {
+      visibility: hidden;
+      background-color: #333;
+      color: #fff;
+      text-align: left;
+      border-radius: 5px;
+      padding: 8px;
+      position: absolute;
+      z-index: 10;
+      top: 100%;
+      left: 0;
+      width: 200px;
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .badge:hover .tooltip {
+      visibility: visible;
+    }
 
     .weekday-labels {
       display: grid;
@@ -80,12 +124,23 @@
 </head>
 <body>
 
-  <div class="top-right">
-    <a href="admin.html">⬅ Back to Admin Dashboard</a>
+  <div class="top-bar">
+    <div class="nav-buttons">
+      <button onclick="changeMonth(-1)">← Prev</button>
+      <button onclick="changeMonth(1)">Next →</button>
+    </div>
+    <div class="filters">
+      <select id="userFilter" onchange="renderCalendar()">
+        <option value="">👤 All Users</option>
+      </select>
+      <select id="projectFilter" onchange="renderCalendar()">
+        <option value="">📁 All Projects</option>
+      </select>
+    </div>
+    <a href="admin.html" style="background:#0053A6;color:white;padding:8px 14px;border-radius:6px;text-decoration:none;">⬅ Admin Dashboard</a>
   </div>
 
-  <h1>📅 Admin Task Calendar – Monthly View</h1>
-
+  <h1 id="monthTitle">📅 Calendar</h1>
   <div class="weekday-labels">
     <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
   </div>
@@ -105,41 +160,100 @@
     }
 
     const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = today.getMonth();
 
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const firstWeekday = firstDay.getDay();
-    const daysInMonth = lastDay.getDate();
+    const users = [...new Set(tasks.map(t => t.assignedTo))];
+    const projects = [...new Set(tasks.map(t => t.project))];
 
-    const grid = document.getElementById("calendarGrid");
+    const userFilter = document.getElementById("userFilter");
+    const projectFilter = document.getElementById("projectFilter");
 
-    for (let i = 0; i < firstWeekday; i++) {
-      const empty = document.createElement("div");
-      empty.className = "day";
-      grid.appendChild(empty);
+    users.forEach(u => {
+      const opt = document.createElement("option");
+      opt.value = u;
+      opt.textContent = u;
+      userFilter.appendChild(opt);
+    });
+
+    projects.forEach(p => {
+      const opt = document.createElement("option");
+      opt.value = p;
+      opt.textContent = p;
+      projectFilter.appendChild(opt);
+    });
+
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+
+    function changeMonth(offset) {
+      currentMonth += offset;
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear -= 1;
+      } else if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear += 1;
+      }
+      renderCalendar();
     }
 
-    for (let day = 1; day <= daysInMonth; day++) {
-      const cellDate = new Date(year, month, day);
-      const dateStr = cellDate.toISOString().split("T")[0];
+    function renderCalendar() {
+      const monthTitle = document.getElementById("monthTitle");
+      const monthNames = ["January", "February", "March", "April", "May", "June",
+                          "July", "August", "September", "October", "November", "December"];
+      monthTitle.textContent = `📅 ${monthNames[currentMonth]} ${currentYear}`;
 
-      const dayCell = document.createElement("div");
-      dayCell.className = "day";
-      dayCell.innerHTML = `<div class="date">${day}</div>`;
+      const grid = document.getElementById("calendarGrid");
+      grid.innerHTML = "";
 
-      const dayTasks = tasks.filter(task => task.deadline === dateStr);
-      dayTasks.forEach(task => {
-        const badge = document.createElement("div");
-        badge.className = `badge status-${task.status.replace(" ", "\\ ")}`;
-        badge.innerText = `${task.title} 👤 ${task.assignedTo}`;
-        dayCell.appendChild(badge);
-      });
+      const firstDay = new Date(currentYear, currentMonth, 1);
+      const lastDay = new Date(currentYear, currentMonth + 1, 0);
+      const firstWeekday = firstDay.getDay();
+      const daysInMonth = lastDay.getDate();
 
-      grid.appendChild(dayCell);
+      for (let i = 0; i < firstWeekday; i++) {
+        const empty = document.createElement("div");
+        empty.className = "day";
+        grid.appendChild(empty);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const cellDate = new Date(currentYear, currentMonth, day);
+        const dateStr = cellDate.toISOString().split("T")[0];
+
+        const dayCell = document.createElement("div");
+        dayCell.className = "day";
+        dayCell.innerHTML = `<div class="date">${day}</div>`;
+
+        const filtered = tasks.filter(task => {
+          return task.deadline === dateStr &&
+                 (!userFilter.value || task.assignedTo === userFilter.value) &&
+                 (!projectFilter.value || task.project === projectFilter.value);
+        });
+
+        filtered.forEach(task => {
+          const badge = document.createElement("div");
+          badge.className = `badge status-${task.status.replace(" ", "\\ ")}`;
+          badge.innerHTML = `${task.title} <span style="opacity:0.7;">(${task.assignedTo})</span>`;
+
+          const tooltip = document.createElement("div");
+          tooltip.className = "tooltip";
+          tooltip.innerHTML = `
+            <strong>${task.title}</strong><br>
+            👤 ${task.assignedTo}<br>
+            📁 ${task.project}<br>
+            🗓️ ${task.deadline}<br>
+            🏷️ ${task.status}<br>
+            ✏️ ${task.note || "No note"}
+          `;
+          badge.appendChild(tooltip);
+          dayCell.appendChild(badge);
+        });
+
+        grid.appendChild(dayCell);
+      }
     }
+
+    renderCalendar();
   </script>
 </body>
 </html>
