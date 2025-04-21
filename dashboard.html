@@ -127,11 +127,6 @@
       transition: width 0.4s;
     }
 
-    .status-Not\ Started { color: gray; }
-    .status-In\ Progress { color: #007bff; }
-    .status-Blocked { color: red; }
-    .status-Done { color: green; }
-
     .completed {
       background-color: #e6ffe6;
       text-decoration: line-through;
@@ -141,14 +136,14 @@
 <body>
 
   <div class="topbar">
-<img src="assets/pusaq-logo.jpeg" alt="Pusaq Logo" style="height: 40px;" />
+    <img src="assets/pusaq-logo.jpeg" alt="Pusaq Logo" />
     <div class="nav-links">
       <a href="calendar-grid.html">📅 Calendar</a>
       <a href="profile.html" id="profileBtn">👤 Profile</a>
     </div>
   </div>
 
-  <h1>🧠 Your Tasks by Project</h1>
+  <h1>🧠 Your Tasks</h1>
 
   <div class="summary-bar">
     <strong id="taskSummaryText">Loading...</strong>
@@ -160,7 +155,9 @@
   <div class="accordion" id="taskContainer"></div>
 
   <script>
+    const API_BASE = "https://api.pusaq.app/api";
     const currentUser = sessionStorage.getItem("currentUser");
+
     if (!currentUser) {
       alert("Please log in.");
       window.location.href = "index.html";
@@ -168,135 +165,16 @@
 
     document.getElementById("profileBtn").innerText = `👤 ${currentUser}`;
 
-    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    const projects = JSON.parse(localStorage.getItem("projects")) || [];
-    const userTasks = tasks.filter(t => t.assignedTo === currentUser);
+    let userTasks = [];
 
-    const grouped = {};
-    userTasks.forEach(task => {
-      if (!grouped[task.project]) grouped[task.project] = [];
-      grouped[task.project].push(task);
-    });
+    async function fetchTasks() {
+      const res = await fetch(`${API_BASE}/tasks?assigned_to=${currentUser}`);
+      userTasks = await res.json();
+      renderSummary();
+      renderTasks();
+    }
 
     function renderSummary() {
       const total = userTasks.length;
       const completed = userTasks.filter(t => t.status === "Done" || t.progress == 100).length;
-      const percent = total ? Math.round((completed / total) * 100) : 0;
-      document.getElementById("taskSummaryText").innerText =
-        `You’ve completed ${completed} of ${total} tasks (${percent}%)`;
-      document.getElementById("summaryBar").style.width = percent + "%";
-    }
-
-    const container = document.getElementById("taskContainer");
-    container.innerHTML = "";
-
-    Object.keys(grouped).forEach(project => {
-      const card = document.createElement("div");
-      card.className = "card";
-
-      const header = document.createElement("h2");
-      header.textContent = project;
-      header.onclick = () => {
-        const panel = header.nextElementSibling;
-        panel.style.display = panel.style.display === "block" ? "none" : "block";
-      };
-
-      const panel = document.createElement("div");
-      panel.className = "panel";
-
-      const table = document.createElement("table");
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th>✓</th>
-            <th>Task</th>
-            <th>Deadline</th>
-            <th>Status</th>
-            <th>Progress</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      `;
-
-      grouped[project].forEach(task => {
-        const row = document.createElement("tr");
-        if (task.status === "Done" || task.progress == 100) {
-          row.classList.add("completed");
-        }
-
-        const statusClass = `status-${task.status.replace(" ", "\\ ")}`;
-        row.innerHTML = `
-          <td><input type="checkbox" ${task.status === 'Done' ? 'checked' : ''} 
-               onchange="toggleComplete('${task.title}', this.checked)"></td>
-          <td>${task.title}</td>
-          <td>${task.deadline}</td>
-          <td>
-            <select class="${statusClass}" onchange="updateStatus('${task.title}', this.value)">
-              <option ${task.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
-              <option ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
-              <option ${task.status === 'Blocked' ? 'selected' : ''}>Blocked</option>
-              <option ${task.status === 'Done' ? 'selected' : ''}>Done</option>
-            </select>
-          </td>
-          <td>
-            <input type="number" value="${task.progress}" min="0" max="100"
-              onchange="updateProgress('${task.title}', this.value)" />%
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: ${task.progress}%"></div>
-            </div>
-          </td>
-          <td>
-            <textarea rows="2" onchange="updateNote('${task.title}', this.value)">${task.note || ''}</textarea>
-          </td>
-        `;
-        table.querySelector("tbody").appendChild(row);
-      });
-
-      panel.appendChild(table);
-      card.appendChild(header);
-      card.appendChild(panel);
-      container.appendChild(card);
-    });
-
-    function updateStatus(title, status) {
-      const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
-      if (task) {
-        task.status = status;
-        if (status === "Done") task.progress = 100;
-        localStorage.setItem("tasks", JSON.stringify(tasks));
-        location.reload();
-      }
-    }
-
-    function toggleComplete(title, isDone) {
-      const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
-      if (task) {
-        task.status = isDone ? "Done" : "In Progress";
-        task.progress = isDone ? 100 : 50;
-        localStorage.setItem("tasks", JSON.stringify(tasks));
-        location.reload();
-      }
-    }
-
-    function updateProgress(title, value) {
-      const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
-      if (task) {
-        task.progress = parseInt(value);
-        if (task.progress >= 100) task.status = "Done";
-        localStorage.setItem("tasks", JSON.stringify(tasks));
-      }
-    }
-
-    function updateNote(title, value) {
-      const task = tasks.find(t => t.title === title && t.assignedTo === currentUser);
-      if (task) {
-        task.note = value;
-        localStorage.setItem("tasks", JSON.stringify(tasks));
-      }
-    }
-
-    renderSummary();
-  </script>
-</body>
-</html>
+      const percent = total ? Math.round((completed / total
