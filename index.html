@@ -1,177 +1,245 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Pusaq Login</title>
+  <meta charset="UTF-8" />
+  <title>Pusaq Admin Dashboard</title>
   <style>
     body {
       margin: 0;
       font-family: 'Montserrat', sans-serif;
-      background-color: #000;
-      color: white;
+      background-color: #022f60;
+    }
+
+    .topbar {
       display: flex;
-      flex-direction: column;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      min-height: 100vh;
+      background: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .topbar img {
+      height: 40px;
+    }
+
+    .topbar .nav-links a {
+      color: #022f60;
+      margin-left: 1rem;
+      font-weight: bold;
+      text-decoration: none;
     }
 
     h1 {
-      margin-bottom: 30px;
-    }
-
-    .profile-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-      gap: 20px;
-      max-width: 700px;
-      width: 90%;
-      margin-bottom: 30px;
-    }
-
-    .profile {
       text-align: center;
-      cursor: pointer;
+      color: white;
+      margin-top: 2rem;
     }
 
-    .profile img {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 3px solid #0053A6;
-      transition: transform 0.2s;
+    .container {
+      max-width: 1100px;
+      margin: 2rem auto;
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
     }
 
-    .profile:hover img {
-      transform: scale(1.05);
-    }
-
-    .name {
-      margin-top: 10px;
-      font-weight: bold;
-      color: #fff;
-    }
-
-    .modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-    }
-
-    .modal-content {
-      background: #111;
+    .card {
+      background: white;
       padding: 2rem;
-      border-radius: 10px;
-      text-align: center;
-      max-width: 400px;
-      width: 90%;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
     }
 
-    input[type="password"] {
+    .card h2 {
+      margin-top: 0;
+      color: #022f60;
+    }
+
+    input, select, textarea, button {
       width: 100%;
       padding: 10px;
       margin-top: 10px;
-      margin-bottom: 15px;
-      border-radius: 5px;
-      border: none;
-      outline: none;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
     }
 
     button {
-      padding: 10px 20px;
-      background: #0053A6;
+      background-color: #0271ff;
       color: white;
+      font-weight: bold;
       border: none;
-      border-radius: 5px;
       cursor: pointer;
+      transition: background 0.2s;
     }
 
     button:hover {
-      background: #003d7a;
+      background-color: #025bd2;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 1rem;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      text-align: center;
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background-color: #0271ff;
+      color: white;
+    }
+
+    .progress-bar {
+      height: 10px;
+      background-color: #ddd;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: #0271ff;
+      width: 0%;
+      transition: width 0.4s;
+    }
+
+    .filter-box {
+      margin-bottom: 1rem;
     }
   </style>
 </head>
 <body>
-  <h1>Who's working today?</h1>
-  <div class="profile-grid" id="profiles"></div>
 
-  <!-- Login Modal -->
-  <div class="modal" id="loginModal">
-    <div class="modal-content">
-      <h2 id="loginName">Login</h2>
-      <input type="password" id="passwordInput" placeholder="Enter password" />
-      <button onclick="checkPassword()">Login</button>
+  <div class="topbar">
+    <img src="assets/pusaq-logo.jpeg" alt="Pusaq Logo" />
+    <div class="nav-links">
+      <a href="admin-calendar-grid.html">📅 Grid View</a>
+      <a href="admin-calendar.html">🗓 List View</a>
+      <a href="profile.html">👤 Profile</a>
+    </div>
+  </div>
+
+  <h1>📊 Pusaq Project Manager</h1>
+
+  <div class="container">
+    <!-- Task creation -->
+    <div class="card">
+      <h2>Create New Task</h2>
+      <input type="text" id="taskTitle" placeholder="Task Title" />
+      <select id="assignedTo">
+        <option value="">Assign to...</option>
+        <option>Ari</option>
+        <option>Issy</option>
+        <option>Vicho</option>
+        <option>Tania</option>
+        <option>Andres</option>
+      </select>
+      <input type="date" id="deadline" />
+      <input type="number" id="progress" placeholder="Progress (%)" min="0" max="100" />
+      <select id="status">
+        <option>Not Started</option>
+        <option>In Progress</option>
+        <option>Blocked</option>
+        <option>Done</option>
+      </select>
+      <button onclick="addTask()">Add Task</button>
+    </div>
+
+    <!-- Task overview -->
+    <div class="card">
+      <h2>All Tasks</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Assigned</th>
+            <th>Deadline</th>
+            <th>Status</th>
+            <th>Progress</th>
+          </tr>
+        </thead>
+        <tbody id="taskTableBody"></tbody>
+      </table>
     </div>
   </div>
 
   <script>
-    const users = [
-      { name: 'Ari', role: 'member' },
-      { name: 'Issy', role: 'member' },
-      { name: 'Vicho', role: 'member' },
-      { name: 'Tania', role: 'member' },
-      { name: 'Andres', role: 'member' },
-      { name: 'Yannick', role: 'admin' },
-      { name: 'Boris', role: 'admin' }
-    ];
+    const API_BASE = "https://api.pusaq.app/api";
 
-    let selectedUser = null;
-
-    function generatePassword() {
-      return Math.random().toString(36).slice(-8);
+    async function fetchTasks() {
+      const res = await fetch(`${API_BASE}/tasks`);
+      const tasks = await res.json();
+      renderTasks(tasks);
     }
 
-    function loadProfiles() {
-      const container = document.getElementById('profiles');
-      container.innerHTML = '';
-      users.forEach(user => {
-        const savedData = JSON.parse(localStorage.getItem(user.name)) || {};
-        if (!savedData.password) {
-          savedData.password = generatePassword();
-          savedData.name = user.name;
-          savedData.role = user.role;
-          savedData.image = 'https://via.placeholder.com/100';
-          localStorage.setItem(user.name, JSON.stringify(savedData));
-        }
-
-        const div = document.createElement('div');
-        div.className = 'profile';
-        div.onclick = () => openLogin(user.name);
-
-        div.innerHTML = `
-          <img src="${savedData.image}" alt="${user.name}" />
-          <div class="name">${savedData.name}</div>
+    function renderTasks(tasks) {
+      const tbody = document.getElementById("taskTableBody");
+      tbody.innerHTML = "";
+      tasks.forEach(task => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${task.title}</td>
+          <td>${task.assigned_to}</td>
+          <td>${task.deadline}</td>
+          <td>${task.status}</td>
+          <td>
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${task.progress || 0}%"></div>
+            </div>
+            <small>${task.progress || 0}%</small>
+          </td>
         `;
-        container.appendChild(div);
+        tbody.appendChild(row);
       });
     }
 
-    function openLogin(username) {
-      selectedUser = username;
-      document.getElementById('loginName').innerText = `Enter password for ${username}`;
-      document.getElementById('passwordInput').value = '';
-      document.getElementById('loginModal').style.display = 'flex';
-    }
+    async function addTask() {
+      const title = document.getElementById("taskTitle").value;
+      const assigned_to = document.getElementById("assignedTo").value;
+      const deadline = document.getElementById("deadline").value;
+      const status = document.getElementById("status").value;
+      const progress = parseInt(document.getElementById("progress").value) || 0;
 
-    function checkPassword() {
-      const input = document.getElementById('passwordInput').value;
-      const saved = JSON.parse(localStorage.getItem(selectedUser));
-      if (input === saved.password) {
-        alert(`✅ Logged in as ${saved.name} (${saved.role})`);
-        sessionStorage.setItem("currentUser", saved.name); // Store for dashboard access
-        window.location.href = saved.role === 'admin' ? 'admin.html' : 'dashboard.html';
+      if (!title || !assigned_to || !deadline) {
+        alert("Please fill in all fields.");
+        return;
+      }
+
+      const response = await fetch(`${API_BASE}/tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          assigned_to,
+          deadline,
+          status,
+          progress
+        })
+      });
+
+      if (response.ok) {
+        alert("✅ Task created!");
+        fetchTasks(); // refresh
+        document.getElementById("taskTitle").value = "";
+        document.getElementById("assignedTo").value = "";
+        document.getElementById("deadline").value = "";
+        document.getElementById("progress").value = "";
+        document.getElementById("status").value = "Not Started";
       } else {
-        alert('❌ Incorrect password!');
+        alert("❌ Failed to create task.");
       }
     }
 
-    loadProfiles();
+    // Initial fetch
+    fetchTasks();
   </script>
 </body>
 </html>
