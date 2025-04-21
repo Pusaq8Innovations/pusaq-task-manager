@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pusaq Login</title>
+  <title>Who's working today? - Pusaq</title>
   <style>
     body {
       margin: 0;
@@ -30,30 +30,55 @@
 
     h1 {
       margin: 2rem 0 1rem;
+      font-size: 2rem;
     }
 
     .user-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 1rem;
-      max-width: 600px;
-      width: 90%;
-      margin: 0 auto 2rem;
+      gap: 2rem;
+      max-width: 800px;
+      margin: 1rem auto 2rem;
+      padding: 0 1rem;
     }
 
     .user-box {
-      background: white;
-      color: #022f60;
-      padding: 1rem;
-      border-radius: 10px;
       text-align: center;
       cursor: pointer;
-      font-weight: bold;
-      transition: transform 0.2s;
+      color: white;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      animation: slideIn 0.5s ease;
     }
 
-    .user-box:hover {
+    .user-box img {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 3px solid white;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .user-box span {
+      display: block;
+      margin-top: 0.5rem;
+      font-size: 1rem;
+      font-weight: bold;
+    }
+
+    .user-box:hover img {
+      box-shadow: 0 0 15px 4px rgba(255, 0, 0, 0.6);
       transform: scale(1.05);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .login-section {
@@ -87,10 +112,12 @@
       font-size: 1rem;
       cursor: pointer;
       margin-top: 1rem;
+      transition: background-color 0.3s, box-shadow 0.3s;
     }
 
     button:hover {
-      background-color: #025bd2;
+      background-color: #d81f26;
+      box-shadow: 0 0 12px 4px rgba(216, 31, 38, 0.5);
     }
 
     @media (max-width: 600px) {
@@ -100,7 +127,16 @@
       }
 
       .user-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .user-box img {
+        width: 80px;
+        height: 80px;
+      }
+
+      .user-box span {
+        font-size: 0.9rem;
       }
 
       .login-section {
@@ -116,20 +152,41 @@
     <div></div>
   </header>
 
-  <h1>Welcome to Pusaq Task Manager</h1>
+  <h1>Who's working today?</h1>
 
   <div class="user-grid">
-    <div class="user-box" onclick="loginAs('Ari')">Ari</div>
-    <div class="user-box" onclick="loginAs('Issy')">Issy</div>
-    <div class="user-box" onclick="loginAs('Vicho')">Vicho</div>
-    <div class="user-box" onclick="loginAs('Tania')">Tania</div>
-    <div class="user-box" onclick="loginAs('Andres')">Andres</div>
-    <div class="user-box" onclick="loginAs('Yannick')">Yannick</div>
-    <div class="user-box" onclick="loginAs('Boris')">Boris</div>
+    <div class="user-box" onclick="loginAs('Ari')">
+      <img src="https://via.placeholder.com/100" alt="Ari" />
+      <span>Ari</span>
+    </div>
+    <div class="user-box" onclick="loginAs('Issy')">
+      <img src="https://via.placeholder.com/100" alt="Issy" />
+      <span>Issy</span>
+    </div>
+    <div class="user-box" onclick="loginAs('Vicho')">
+      <img src="https://via.placeholder.com/100" alt="Vicho" />
+      <span>Vicho</span>
+    </div>
+    <div class="user-box" onclick="loginAs('Tania')">
+      <img src="https://via.placeholder.com/100" alt="Tania" />
+      <span>Tania</span>
+    </div>
+    <div class="user-box" onclick="loginAs('Andres')">
+      <img src="https://via.placeholder.com/100" alt="Andres" />
+      <span>Andres</span>
+    </div>
+    <div class="user-box" onclick="loginAs('Yannick')">
+      <img src="https://via.placeholder.com/100" alt="Yannick" />
+      <span>Yannick</span>
+    </div>
+    <div class="user-box" onclick="loginAs('Boris')">
+      <img src="https://via.placeholder.com/100" alt="Boris" />
+      <span>Boris</span>
+    </div>
   </div>
 
   <div class="login-section">
-    <h2>Log in manually</h2>
+    <h2>Or log in manually</h2>
     <input type="text" id="username" placeholder="Enter name" />
     <button onclick="manualLogin()">Login</button>
   </div>
