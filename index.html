@@ -2,67 +2,79 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Pusaq Admin Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pusaq Login</title>
   <style>
     body {
       margin: 0;
       font-family: 'Montserrat', sans-serif;
       background-color: #022f60;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
-    .topbar {
+    header {
+      width: 100%;
+      background: white;
+      padding: 1rem 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      background: white;
-      padding: 1rem 2rem;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
     }
 
-    .topbar img {
+    header img {
       height: 40px;
     }
 
-    .topbar .nav-links a {
-      color: #022f60;
-      margin-left: 1rem;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
     h1 {
-      text-align: center;
-      color: white;
-      margin-top: 2rem;
+      margin: 2rem 0 1rem;
     }
 
-    .container {
-      max-width: 1100px;
-      margin: 2rem auto;
-      display: flex;
-      flex-direction: column;
-      gap: 2rem;
+    .user-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 1rem;
+      max-width: 600px;
+      width: 90%;
+      margin: 0 auto 2rem;
     }
 
-    .card {
+    .user-box {
       background: white;
+      color: #022f60;
+      padding: 1rem;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+
+    .user-box:hover {
+      transform: scale(1.05);
+    }
+
+    .login-section {
+      background: white;
+      color: #022f60;
       padding: 2rem;
       border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      max-width: 400px;
+      width: 90%;
+      margin-bottom: 2rem;
+      text-align: center;
     }
 
-    .card h2 {
-      margin-top: 0;
-      color: #022f60;
-    }
-
-    input, select, textarea, button {
+    .login-section input {
       width: 100%;
       padding: 10px;
-      margin-top: 10px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
+      margin: 0.5rem 0;
       font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 6px;
     }
 
     button {
@@ -70,176 +82,73 @@
       color: white;
       font-weight: bold;
       border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 1rem;
       cursor: pointer;
-      transition: background 0.2s;
+      margin-top: 1rem;
     }
 
     button:hover {
       background-color: #025bd2;
     }
 
-    table {
-      width: 100%;
-      margin-top: 1rem;
-      border-collapse: collapse;
-    }
+    @media (max-width: 600px) {
+      h1 {
+        font-size: 1.4rem;
+        text-align: center;
+      }
 
-    th, td {
-      text-align: center;
-      padding: 12px;
-      border-bottom: 1px solid #eee;
-    }
+      .user-grid {
+        grid-template-columns: 1fr 1fr;
+      }
 
-    th {
-      background-color: #0271ff;
-      color: white;
-    }
-
-    .progress-bar {
-      height: 10px;
-      background-color: #ddd;
-      border-radius: 5px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background-color: #0271ff;
-      width: 0%;
-      transition: width 0.4s;
-    }
-
-    .filter-box {
-      margin-bottom: 1rem;
+      .login-section {
+        padding: 1.5rem;
+      }
     }
   </style>
 </head>
 <body>
 
-  <div class="topbar">
+  <header>
     <img src="assets/pusaq-logo.jpeg" alt="Pusaq Logo" />
-    <div class="nav-links">
-      <a href="admin-calendar-grid.html">📅 Grid View</a>
-      <a href="admin-calendar.html">🗓 List View</a>
-      <a href="profile.html">👤 Profile</a>
-    </div>
+    <div></div>
+  </header>
+
+  <h1>Welcome to Pusaq Task Manager</h1>
+
+  <div class="user-grid">
+    <div class="user-box" onclick="loginAs('Ari')">Ari</div>
+    <div class="user-box" onclick="loginAs('Issy')">Issy</div>
+    <div class="user-box" onclick="loginAs('Vicho')">Vicho</div>
+    <div class="user-box" onclick="loginAs('Tania')">Tania</div>
+    <div class="user-box" onclick="loginAs('Andres')">Andres</div>
+    <div class="user-box" onclick="loginAs('Yannick')">Yannick</div>
+    <div class="user-box" onclick="loginAs('Boris')">Boris</div>
   </div>
 
-  <h1>📊 Pusaq Project Manager</h1>
-
-  <div class="container">
-    <!-- Task creation -->
-    <div class="card">
-      <h2>Create New Task</h2>
-      <input type="text" id="taskTitle" placeholder="Task Title" />
-      <select id="assignedTo">
-        <option value="">Assign to...</option>
-        <option>Ari</option>
-        <option>Issy</option>
-        <option>Vicho</option>
-        <option>Tania</option>
-        <option>Andres</option>
-      </select>
-      <input type="date" id="deadline" />
-      <input type="number" id="progress" placeholder="Progress (%)" min="0" max="100" />
-      <select id="status">
-        <option>Not Started</option>
-        <option>In Progress</option>
-        <option>Blocked</option>
-        <option>Done</option>
-      </select>
-      <button onclick="addTask()">Add Task</button>
-    </div>
-
-    <!-- Task overview -->
-    <div class="card">
-      <h2>All Tasks</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Task</th>
-            <th>Assigned</th>
-            <th>Deadline</th>
-            <th>Status</th>
-            <th>Progress</th>
-          </tr>
-        </thead>
-        <tbody id="taskTableBody"></tbody>
-      </table>
-    </div>
+  <div class="login-section">
+    <h2>Log in manually</h2>
+    <input type="text" id="username" placeholder="Enter name" />
+    <button onclick="manualLogin()">Login</button>
   </div>
 
   <script>
-    const API_BASE = "https://api.pusaq.app/api";
-
-    async function fetchTasks() {
-      const res = await fetch(`${API_BASE}/tasks`);
-      const tasks = await res.json();
-      renderTasks(tasks);
+    function loginAs(name) {
+      sessionStorage.setItem("currentUser", name);
+      const isAdmin = name === "Yannick" || name === "Boris";
+      window.location.href = isAdmin ? "admin.html" : "dashboard.html";
     }
 
-    function renderTasks(tasks) {
-      const tbody = document.getElementById("taskTableBody");
-      tbody.innerHTML = "";
-      tasks.forEach(task => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${task.title}</td>
-          <td>${task.assigned_to}</td>
-          <td>${task.deadline}</td>
-          <td>${task.status}</td>
-          <td>
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: ${task.progress || 0}%"></div>
-            </div>
-            <small>${task.progress || 0}%</small>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
-
-    async function addTask() {
-      const title = document.getElementById("taskTitle").value;
-      const assigned_to = document.getElementById("assignedTo").value;
-      const deadline = document.getElementById("deadline").value;
-      const status = document.getElementById("status").value;
-      const progress = parseInt(document.getElementById("progress").value) || 0;
-
-      if (!title || !assigned_to || !deadline) {
-        alert("Please fill in all fields.");
+    function manualLogin() {
+      const name = document.getElementById("username").value.trim();
+      if (!name) {
+        alert("Please enter a name");
         return;
       }
-
-      const response = await fetch(`${API_BASE}/tasks`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          assigned_to,
-          deadline,
-          status,
-          progress
-        })
-      });
-
-      if (response.ok) {
-        alert("✅ Task created!");
-        fetchTasks(); // refresh
-        document.getElementById("taskTitle").value = "";
-        document.getElementById("assignedTo").value = "";
-        document.getElementById("deadline").value = "";
-        document.getElementById("progress").value = "";
-        document.getElementById("status").value = "Not Started";
-      } else {
-        alert("❌ Failed to create task.");
-      }
+      loginAs(name);
     }
-
-    // Initial fetch
-    fetchTasks();
   </script>
 </body>
 </html>
