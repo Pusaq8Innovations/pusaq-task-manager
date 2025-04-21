@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pusaq Admin Dashboard</title>
   <style>
     body {
@@ -42,6 +43,7 @@
       display: flex;
       flex-direction: column;
       gap: 2rem;
+      padding: 0 1rem;
     }
 
     .card {
@@ -61,8 +63,11 @@
       padding: 10px;
       margin-top: 10px;
       border-radius: 6px;
-      border: 1px solid #ccc;
       font-size: 1rem;
+    }
+
+    input, select, textarea {
+      border: 1px solid #ccc;
     }
 
     button {
@@ -109,15 +114,67 @@
       transition: width 0.4s;
     }
 
-    .filter-box {
-      margin-bottom: 1rem;
+    @media (max-width: 768px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav-links {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        margin-top: 1rem;
+      }
+
+      .nav-links a {
+        margin: 0.5rem 0;
+      }
+
+      .card {
+        padding: 1rem;
+        margin: 1rem 0;
+      }
+
+      table, thead, tbody, th, td, tr {
+        display: block;
+        width: 100%;
+      }
+
+      thead {
+        display: none;
+      }
+
+      td {
+        position: relative;
+        padding-left: 50%;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 1rem;
+      }
+
+      td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 1rem;
+        top: 10px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .progress-bar {
+        height: 8px;
+      }
+
+      .progress-fill {
+        height: 8px;
+      }
     }
   </style>
 </head>
 <body>
 
   <div class="topbar">
-   <img src="assets/pusaq-logo.jpeg" alt="Pusaq Logo" style="height: 40px;" />
+    <img src="assets/pusaq-logo.jpeg" alt="Pusaq Logo" />
     <div class="nav-links">
       <a href="admin-calendar-grid.html">📅 Grid View</a>
       <a href="admin-calendar.html">🗓 List View</a>
@@ -128,18 +185,9 @@
   <h1>📊 Pusaq Project Manager</h1>
 
   <div class="container">
-    <!-- Project creation -->
-    <div class="card">
-      <h2>Create New Project</h2>
-      <input type="text" id="projectName" placeholder="Project Title" />
-      <textarea id="projectDesc" placeholder="Project Description"></textarea>
-      <button onclick="addProject()">Add Project</button>
-    </div>
-
     <!-- Task creation -->
     <div class="card">
       <h2>Create New Task</h2>
-      <select id="taskProject"></select>
       <input type="text" id="taskTitle" placeholder="Task Title" />
       <select id="assignedTo">
         <option value="">Assign to...</option>
@@ -150,27 +198,22 @@
         <option>Andres</option>
       </select>
       <input type="date" id="deadline" />
+      <input type="number" id="progress" placeholder="Progress (%)" min="0" max="100" />
       <select id="status">
         <option>Not Started</option>
         <option>In Progress</option>
         <option>Blocked</option>
         <option>Done</option>
       </select>
-      <input type="number" id="progress" placeholder="Progress (%)" min="0" max="100" />
       <button onclick="addTask()">Add Task</button>
     </div>
 
     <!-- Task overview -->
     <div class="card">
       <h2>All Tasks</h2>
-      <div class="filter-box">
-        <label for="filterProject">Filter by project:</label>
-        <select id="filterProject" onchange="renderTasks()"></select>
-      </div>
       <table>
         <thead>
           <tr>
-            <th>Project</th>
             <th>Task</th>
             <th>Assigned</th>
             <th>Deadline</th>
@@ -184,92 +227,75 @@
   </div>
 
   <script>
-    const projects = JSON.parse(localStorage.getItem("projects")) || [];
-    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    const API_BASE = "https://api.pusaq.app/api";
 
-    function saveData() {
-      localStorage.setItem("projects", JSON.stringify(projects));
-      localStorage.setItem("tasks", JSON.stringify(tasks));
+    async function fetchTasks() {
+      const res = await fetch(`${API_BASE}/tasks`);
+      const tasks = await res.json();
+      renderTasks(tasks);
     }
 
-    function addProject() {
-      const name = document.getElementById("projectName").value.trim();
-      const desc = document.getElementById("projectDesc").value.trim();
-      if (!name) return alert("Please enter a project name.");
-      projects.push({ name, desc });
-      saveData();
-      alert("✅ Project added!");
-      document.getElementById("projectName").value = "";
-      document.getElementById("projectDesc").value = "";
-      updateProjectDropdowns();
-    }
-
-    function updateProjectDropdowns() {
-      const selects = [document.getElementById("taskProject"), document.getElementById("filterProject")];
-      selects.forEach(select => {
-        select.innerHTML = '<option value="">All Projects</option>';
-        projects.forEach(p => {
-          const opt = document.createElement("option");
-          opt.value = p.name;
-          opt.textContent = p.name;
-          select.appendChild(opt);
-        });
+    function renderTasks(tasks) {
+      const tbody = document.getElementById("taskTableBody");
+      tbody.innerHTML = "";
+      tasks.forEach(task => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td data-label="Task">${task.title}</td>
+          <td data-label="Assigned">${task.assigned_to}</td>
+          <td data-label="Deadline">${task.deadline}</td>
+          <td data-label="Status">${task.status}</td>
+          <td data-label="Progress">
+            <div class="progress-bar">
+              <div class="progress-fill" style="width: ${task.progress || 0}%"></div>
+            </div>
+            <small>${task.progress || 0}%</small>
+          </td>
+        `;
+        tbody.appendChild(row);
       });
     }
 
-    function addTask() {
-      const project = document.getElementById("taskProject").value;
+    async function addTask() {
       const title = document.getElementById("taskTitle").value;
-      const assignedTo = document.getElementById("assignedTo").value;
+      const assigned_to = document.getElementById("assignedTo").value;
       const deadline = document.getElementById("deadline").value;
       const status = document.getElementById("status").value;
       const progress = parseInt(document.getElementById("progress").value) || 0;
 
-      if (!project || !title || !assignedTo || !deadline) {
+      if (!title || !assigned_to || !deadline) {
         alert("Please fill in all fields.");
         return;
       }
 
-      tasks.push({ project, title, assignedTo, deadline, status, progress });
-      saveData();
-      renderTasks();
+      const response = await fetch(`${API_BASE}/tasks`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title,
+          assigned_to,
+          deadline,
+          status,
+          progress
+        })
+      });
 
-      document.getElementById("taskTitle").value = "";
-      document.getElementById("assignedTo").value = "";
-      document.getElementById("deadline").value = "";
-      document.getElementById("status").value = "Not Started";
-      document.getElementById("progress").value = "";
+      if (response.ok) {
+        alert("✅ Task created!");
+        fetchTasks(); // refresh
+        document.getElementById("taskTitle").value = "";
+        document.getElementById("assignedTo").value = "";
+        document.getElementById("deadline").value = "";
+        document.getElementById("progress").value = "";
+        document.getElementById("status").value = "Not Started";
+      } else {
+        alert("❌ Failed to create task.");
+      }
     }
 
-    function renderTasks() {
-      const filter = document.getElementById("filterProject").value;
-      const tbody = document.getElementById("taskTableBody");
-      tbody.innerHTML = "";
-
-      tasks
-        .filter(t => !filter || t.project === filter)
-        .forEach(task => {
-          const row = document.createElement("tr");
-
-          row.innerHTML = `
-            <td>${task.project}</td>
-            <td>${task.title}</td>
-            <td>${task.assignedTo}</td>
-            <td>${task.deadline}</td>
-            <td>${task.status}</td>
-            <td>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: ${task.progress}%"></div>
-              </div>
-              <small>${task.progress}%</small>
-            </td>
-          `;
-          tbody.appendChild(row);
-        });
-    }
-
-    updateProjectDropdowns();
-    renderTasks();
+    fetchTasks();
   </script>
 </body>
 </html>
