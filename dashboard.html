@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pusaq Dashboard</title>
   <style>
     body {
@@ -131,6 +132,67 @@
       background-color: #e6ffe6;
       text-decoration: line-through;
     }
+
+    /* ✅ MOBILE RESPONSIVE */
+    @media (max-width: 768px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .nav-links {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        margin-top: 1rem;
+      }
+
+      .nav-links a {
+        margin: 0.5rem 0;
+      }
+
+      .accordion {
+        padding: 0 1rem;
+      }
+
+      .card {
+        padding: 1rem;
+        margin: 1rem 0;
+      }
+
+      table, thead, tbody, th, td, tr {
+        display: block;
+        width: 100%;
+      }
+
+      thead {
+        display: none;
+      }
+
+      td {
+        position: relative;
+        padding-left: 50%;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 1rem;
+      }
+
+      td::before {
+        content: attr(data-label);
+        position: absolute;
+        left: 1rem;
+        top: 10px;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .progress-bar {
+        height: 8px;
+      }
+
+      .progress-fill {
+        height: 8px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -157,7 +219,6 @@
   <script>
     const API_BASE = "https://api.pusaq.app/api";
     const currentUser = sessionStorage.getItem("currentUser");
-
     if (!currentUser) {
       alert("Please log in.");
       window.location.href = "index.html";
@@ -177,4 +238,114 @@
     function renderSummary() {
       const total = userTasks.length;
       const completed = userTasks.filter(t => t.status === "Done" || t.progress == 100).length;
-      const percent = total ? Math.round((completed / total
+      const percent = total ? Math.round((completed / total) * 100) : 0;
+      document.getElementById("taskSummaryText").innerText =
+        `You’ve completed ${completed} of ${total} tasks (${percent}%)`;
+      document.getElementById("summaryBar").style.width = percent + "%";
+    }
+
+    function renderTasks() {
+      const grouped = {};
+      userTasks.forEach(task => {
+        if (!grouped[task.project]) grouped[task.project] = [];
+        grouped[task.project].push(task);
+      });
+
+      const container = document.getElementById("taskContainer");
+      container.innerHTML = "";
+
+      Object.keys(grouped).forEach(project => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        const header = document.createElement("h2");
+        header.textContent = project;
+        header.onclick = () => {
+          const panel = header.nextElementSibling;
+          panel.style.display = panel.style.display === "block" ? "none" : "block";
+        };
+
+        const panel = document.createElement("div");
+        panel.className = "panel";
+
+        const table = document.createElement("table");
+        table.innerHTML = `
+          <thead>
+            <tr>
+              <th>✓</th>
+              <th>Task</th>
+              <th>Deadline</th>
+              <th>Status</th>
+              <th>Progress</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        `;
+
+        grouped[project].forEach(task => {
+          const row = document.createElement("tr");
+          if (task.status === "Done" || task.progress == 100) row.classList.add("completed");
+
+          row.innerHTML = `
+            <td data-label="✓"><input type="checkbox" ${task.status === 'Done' ? 'checked' : ''} onchange="toggleComplete(${task.id}, this.checked)"></td>
+            <td data-label="Task">${task.title}</td>
+            <td data-label="Deadline">${task.deadline}</td>
+            <td data-label="Status">
+              <select onchange="updateStatus(${task.id}, this.value)">
+                <option ${task.status === 'Not Started' ? 'selected' : ''}>Not Started</option>
+                <option ${task.status === 'In Progress' ? 'selected' : ''}>In Progress</option>
+                <option ${task.status === 'Blocked' ? 'selected' : ''}>Blocked</option>
+                <option ${task.status === 'Done' ? 'selected' : ''}>Done</option>
+              </select>
+            </td>
+            <td data-label="Progress">
+              <input type="number" value="${task.progress}" min="0" max="100"
+                     onchange="updateProgress(${task.id}, this.value)" />%
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${task.progress}%"></div>
+              </div>
+            </td>
+            <td data-label="Notes">
+              <textarea rows="2" onchange="updateNote(${task.id}, this.value)">${task.note || ''}</textarea>
+            </td>
+          `;
+          table.querySelector("tbody").appendChild(row);
+        });
+
+        panel.appendChild(table);
+        card.appendChild(header);
+        card.appendChild(panel);
+        container.appendChild(card);
+      });
+    }
+
+    function patchTask(id, update) {
+      return fetch(`${API_BASE}/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(update)
+      });
+    }
+
+    function toggleComplete(id, done) {
+      patchTask(id, { status: done ? "Done" : "In Progress", progress: done ? 100 : 50 })
+        .then(() => fetchTasks());
+    }
+
+    function updateStatus(id, status) {
+      patchTask(id, { status }).then(() => fetchTasks());
+    }
+
+    function updateProgress(id, progress) {
+      patchTask(id, { progress: parseInt(progress) }).then(() => fetchTasks());
+    }
+
+    function updateNote(id, note) {
+      patchTask(id, { note });
+    }
+
+    fetchTasks();
+  </script>
+</body>
+</html>
