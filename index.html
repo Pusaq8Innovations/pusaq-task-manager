@@ -14,6 +14,7 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      overflow-x: hidden;
     }
 
     .logo {
@@ -37,6 +38,7 @@
       max-width: 800px;
       margin: 0 auto 3rem;
       padding: 0 1rem;
+      z-index: 1;
     }
 
     .user-box {
@@ -45,6 +47,7 @@
       color: white;
       transition: transform 0.2s ease, box-shadow 0.2s ease;
       animation: slideIn 0.5s ease;
+      z-index: 2;
     }
 
     .user-box img {
@@ -78,6 +81,46 @@
       }
     }
 
+    /* Floating background comments */
+    #floating-comments-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 0;
+    }
+
+    .floating-comment {
+      position: absolute;
+      color: white;
+      font-size: 1.2rem;
+      font-family: 'Courier New', monospace;
+      opacity: 0;
+      white-space: nowrap;
+      animation: fadeInOut 8s ease forwards;
+    }
+
+    @keyframes fadeInOut {
+      0% {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      10% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+      90% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+    }
+
     @media (max-width: 600px) {
       h1 {
         font-size: 1.4rem;
@@ -106,7 +149,7 @@
 <body>
 
   <div class="logo">
-    <img src="pusaq-logo1.jpeg" alt="Pusaq Logo" />
+    <img src="pusaq-logo.jpeg" alt="Pusaq Logo" />
   </div>
 
   <h1>Who's working today?</h1>
@@ -142,12 +185,52 @@
     </div>
   </div>
 
+  <!-- Floating comments overlay -->
+  <div id="floating-comments-container"></div>
+
   <script>
     function loginAs(name) {
       sessionStorage.setItem("currentUser", name);
       const isAdmin = name === "Yannick" || name === "Boris";
       window.location.href = isAdmin ? "admin.html" : "dashboard.html";
     }
+
+    // ☁️ Floating Comments
+    const commentContainer = document.getElementById("floating-comments-container");
+
+    function getAllComments() {
+      const users = ["Ari", "Issy", "Vicho", "Tania", "Andres", "Yannick", "Boris"];
+      return users.map(name => localStorage.getItem(`comment_${name}`)).filter(Boolean);
+    }
+
+    function spawnFloatingComment(text) {
+      const el = document.createElement("div");
+      el.className = "floating-comment";
+      el.style.top = Math.random() * 80 + "%";
+      el.style.left = Math.random() * 80 + "%";
+      commentContainer.appendChild(el);
+
+      let i = 0;
+      const type = setInterval(() => {
+        el.textContent += text[i++];
+        if (i >= text.length) clearInterval(type);
+      }, 80);
+
+      setTimeout(() => {
+        el.remove();
+      }, 8000);
+    }
+
+    function loopFloatingComments() {
+      const comments = getAllComments();
+      if (!comments.length) return;
+      setInterval(() => {
+        const text = comments[Math.floor(Math.random() * comments.length)];
+        spawnFloatingComment(text);
+      }, 4000);
+    }
+
+    loopFloatingComments();
   </script>
 </body>
 </html>
