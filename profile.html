@@ -63,7 +63,8 @@
     input[type="file"],
     input[type="text"],
     input[readonly],
-    button {
+    button,
+    textarea {
       width: 100%;
       padding: 10px;
       margin: 10px 0;
@@ -71,7 +72,7 @@
       font-size: 1rem;
     }
 
-    input, input[readonly] {
+    input, input[readonly], textarea {
       border: 1px solid #ccc;
     }
 
@@ -85,6 +86,11 @@
 
     button:hover {
       background-color: #025bd2;
+    }
+
+    textarea {
+      resize: none;
+      height: 60px;
     }
 
     @media (max-width: 768px) {
@@ -103,17 +109,13 @@
         margin: 1rem;
         padding: 1.5rem;
       }
-
-      input, button {
-        font-size: 1rem;
-      }
     }
   </style>
 </head>
 <body>
 
   <div class="topbar">
-    <img src="assets/pusaq-logo.jpeg" alt="Pusaq Logo" />
+    <img src="pusaq-logo.jpeg" alt="Pusaq Logo" />
     <div class="nav-links">
       <a href="dashboard.html">📋 Dashboard</a>
       <a href="calendar-grid.html">📅 Calendar</a>
@@ -121,13 +123,17 @@
   </div>
 
   <h1>👤 Your Profile</h1>
+
   <div class="profile-box">
     <img id="avatar" src="https://via.placeholder.com/100" alt="Profile" />
     <input type="file" id="imageUpload" accept="image/*" />
     <input type="text" id="displayName" placeholder="Your name" />
     <input type="text" id="role" readonly />
     <input type="text" id="password" readonly value="Auto-generated" />
-    <button onclick="saveProfile()">💾 Save Changes</button>
+
+    <textarea id="userComment" placeholder="Floating message for login page..."></textarea>
+
+    <button onclick="saveProfile()">💾 Save Profile</button>
     <button onclick="goToDashboard()">📋 Go to Dashboard</button>
     <button onclick="logout()">🚪 Logout</button>
   </div>
@@ -145,6 +151,7 @@
     const displayName = document.getElementById("displayName");
     const role = document.getElementById("role");
     const imageUpload = document.getElementById("imageUpload");
+    const commentInput = document.getElementById("userComment");
 
     let profileData = {};
 
@@ -155,6 +162,12 @@
       displayName.value = profileData.name || currentUser;
       role.value = profileData.role || "user";
       avatar.src = profileData.image || "https://via.placeholder.com/100";
+
+      // Load comment from localStorage
+      const savedComment = localStorage.getItem(`comment_${currentUser}`);
+      if (savedComment) {
+        commentInput.value = savedComment;
+      }
     }
 
     imageUpload.addEventListener("change", function () {
@@ -170,6 +183,10 @@
 
     async function saveProfile() {
       profileData.name = displayName.value;
+
+      // Save comment
+      const comment = commentInput.value.trim();
+      localStorage.setItem(`comment_${currentUser}`, comment);
 
       const res = await fetch(`${API_BASE}/users/${currentUser}`, {
         method: "PATCH",
