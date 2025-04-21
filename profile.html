@@ -86,7 +86,7 @@
 <body>
 
   <div class="topbar">
-<img src="assets/pusaq-logo.jpeg" alt="Pusaq Logo" style="height: 40px;" />
+    <img src="assets/pusaq-logo.jpeg" alt="Pusaq Logo" />
     <div class="nav-links">
       <a href="dashboard.html">📋 Dashboard</a>
       <a href="calendar-grid.html">📅 Calendar</a>
@@ -99,30 +99,37 @@
     <input type="file" id="imageUpload" accept="image/*" />
     <input type="text" id="displayName" placeholder="Your name" />
     <input type="text" id="role" readonly />
-    <input type="text" id="password" readonly />
+    <input type="text" id="password" readonly value="Auto-generated" />
     <button onclick="saveProfile()">💾 Save Changes</button>
     <button onclick="goToDashboard()">📋 Go to Dashboard</button>
     <button onclick="logout()">🚪 Logout</button>
   </div>
 
   <script>
+    const API_BASE = "https://api.pusaq.app/api";
     const currentUser = sessionStorage.getItem("currentUser");
     if (!currentUser) {
       alert("Please log in.");
       window.location.href = "index.html";
     }
 
-    let profile = JSON.parse(localStorage.getItem(currentUser));
     const avatar = document.getElementById("avatar");
     const displayName = document.getElementById("displayName");
     const role = document.getElementById("role");
-    const password = document.getElementById("password");
     const imageUpload = document.getElementById("imageUpload");
 
-    avatar.src = profile.image || "https://via.placeholder.com/100";
-    displayName.value = profile.name || currentUser;
-    role.value = profile.role;
-    password.value = profile.password;
+    let profileData = {};
+
+    async function loadProfile() {
+      const res = await fetch(`${API_BASE}/users/${currentUser}`);
+      profileData = await res.json();
+
+      displayName.value = profileData.name || currentUser;
+      role.value = profileData.role || "user";
+
+      // Handle image (if stored in DB)
+      avatar.src = profileData.image || "https://via.placeholder.com/100";
+    }
 
     imageUpload.addEventListener("change", function () {
       const file = this.files[0];
@@ -130,26 +137,9 @@
       const reader = new FileReader();
       reader.onload = function (e) {
         avatar.src = e.target.result;
-        profile.image = e.target.result;
+        profileData.image = e.target.result;
       };
       reader.readAsDataURL(file);
     });
 
-    function saveProfile() {
-      profile.name = displayName.value;
-      localStorage.setItem(currentUser, JSON.stringify(profile));
-      alert("✅ Profile updated!");
-      location.reload();
-    }
-
-    function goToDashboard() {
-      window.location.href = profile.role === "admin" ? "admin.html" : "dashboard.html";
-    }
-
-    function logout() {
-      sessionStorage.clear();
-      window.location.href = "index.html";
-    }
-  </script>
-</body>
-</html>
+    async function saveProfile() {
