@@ -149,7 +149,7 @@
 <body>
 
   <div class="logo">
-    <img src="pusaq-logo1.jpeg" alt="Pusaq Logo" />
+    <img src="pusaq-logo.jpeg" alt="Pusaq Logo" />
   </div>
 
   <h1>Who's working today?</h1>
@@ -200,7 +200,10 @@
 
     function getAllComments() {
       const users = ["Ari", "Issy", "Vicho", "Tania", "Andres", "Yannick", "Boris"];
-      return users.map(name => localStorage.getItem(`comment_${name}`)).filter(Boolean);
+      return users.map(name => {
+        const comment = localStorage.getItem(`comment_${name}`);
+        return comment ? `${name}: ${comment}` : null;
+      }).filter(Boolean);
     }
 
     function spawnFloatingComment(text) {
