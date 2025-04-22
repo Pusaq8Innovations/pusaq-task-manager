@@ -155,11 +155,11 @@
   <h1>Who's working today?</h1>
 
   <div class="user-grid">
-    <div class="user-box" onclick="loginAs('Ari')">
+    <div class="user-box">
       <img src="https://via.placeholder.com/100" alt="Ari" />
       <span>Ari</span>
     </div>
-    <div class="user-box" onclick="loginAs('Issy')">
+    <div class="user-box">
       <img src="https://via.placeholder.com/100" alt="Issy" />
       <span>Issy</span>
     </div>
@@ -191,7 +191,7 @@
   <script>
     function loginAs(name) {
       sessionStorage.setItem("currentUser", name);
-      const isAdmin = name === "Yannick" || name === "Boris";
+      const isAdmin = name === "Yannick" || name === "Boris" || name === "Andres";
       window.location.href = isAdmin ? "admin.html" : "dashboard.html";
     }
 
