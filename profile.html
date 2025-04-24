@@ -26,10 +26,56 @@
     <input type="text" id="password" readonly value="Auto-generated" />
     <textarea id="userComment" placeholder="Floating message for login page..."></textarea>
 
-    <button>💾 Save Profile</button>
-    <button>📋 Go to Dashboard</button>
-    <button>🚪 Logout</button>
+    <button onclick="saveProfile()">💾 Save Profile</button>
+    <button onclick="goToDashboard()">📋 Go to Dashboard</button>
+    <button onclick="logout()">🚪 Logout</button>
   </div>
 
+  <script src="backend.js"></script>
+  <script>
+    async function loadProfile() {
+      try {
+        const user = await AuthAPI.me();
+
+        document.getElementById("displayName").value = user.name;
+        document.getElementById("role").value = user.role;
+        document.getElementById("userComment").value = localStorage.getItem(`comment_${user.name}`) || "";
+
+        // Puedes integrar carga de avatar si la API lo permite
+      } catch (err) {
+        console.error("Failed to load user:", err);
+        alert("Failed to load profile.");
+        window.location.href = "index.html";
+      }
+    }
+
+    function saveProfile() {
+      const name = document.getElementById("displayName").value;
+      const comment = document.getElementById("userComment").value;
+
+      const username = localStorage.getItem("user_name");
+      if (username) {
+        localStorage.setItem(`comment_${username}`, comment);
+      }
+
+      alert("✅ Profile saved! (Note: Name changes are not yet sent to the server.)");
+    }
+
+    function goToDashboard() {
+      window.location.href = "dashboard.html";
+    }
+
+    async function logout() {
+      try {
+        await AuthAPI.logout();
+        window.location.href = "index.html";
+      } catch (err) {
+        console.error("Logout failed:", err);
+        alert("Error during logout.");
+      }
+    }
+
+    loadProfile();
+  </script>
 </body>
 </html>

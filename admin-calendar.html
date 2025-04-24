@@ -1,68 +1,197 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>Pusaq Admin Calendar</title>
-  <link rel="stylesheet" href="styles/admin-calendar.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pusaq Admin Dashboard</title>
+  <link rel="stylesheet" href="styles/admin.css">
 </head>
+
 <body>
 
-  <div class="top-right">
-    <a href="admin.html">⬅ Back to Admin Dashboard</a>
+  <div class="topbar">
+    <img src="pusaq-logo.jpeg" alt="Pusaq Logo" />
+    <div class="nav-links">
+      <a href="admin-calendar-grid.html">📅 Grid View</a>
+      <a href="profile.html">👤 Profile</a>
+    </div>
   </div>
 
-  <h1>📅 Admin Calendar Overview</h1>
+  <h1>📊 Admin Dashboard</h1>
 
-  <div class="calendar-table">
-    <table>
-      <thead>
-        <tr>
-          <th>Deadline</th>
-          <th>Task</th>
-          <th>Project</th>
-          <th>Assigned To</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody id="calendarBody"></tbody>
-    </table>
+  <div class="container">
+
+    <!-- Floating login message -->
+    <div class="card">
+      <h2>Floating Login Message 💬</h2>
+      <input type="text" id="floatingMessage" placeholder="Type your message for the login screen..." />
+      <button>💾 Save Message</button>
+    </div>
+
+    <!-- Task creation -->
+    <div class="card">
+      <h2>Create New Task</h2>
+      <input type="text" id="taskTitle" placeholder="Task Title" />
+      <select id="assignedTo">
+        <option value="">Assign to...</option>
+        <!-- Los usuarios se llenarán dinámicamente aquí -->
+      </select>
+      <input type="date" id="deadline" />
+      <input type="number" id="progress" placeholder="Progress (%)" min="0" max="100" />
+      <select id="status">
+        <option>Not Started</option>
+        <option>In Progress</option>
+        <option>Blocked</option>
+        <option>Done</option>
+      </select>
+      <button id="addTaskBtn">Add Task</button>
+    </div>
+
+    <!-- Task overview -->
+    <div class="card">
+      <h2>All Tasks</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Task</th>
+            <th>Assigned</th>
+            <th>Deadline</th>
+            <th>Status</th>
+            <th>Progress</th>
+          </tr>
+        </thead>
+        <tbody id="taskTableBody">
+          <!-- Las tareas se llenarán dinámicamente aquí -->
+        </tbody>
+      </table>
+    </div>
+
   </div>
 
   <script>
-    const currentUser = sessionStorage.getItem("currentUser");
-    if (!currentUser) {
-      alert("Please log in.");
+    // Validación simple de sesión
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("⚠️ You are not logged in. Redirecting to login page...");
       window.location.href = "index.html";
     }
 
-    const profile = JSON.parse(localStorage.getItem(currentUser));
-    if (!profile || profile.role !== "admin") {
-      alert("Access denied: Admins only.");
-      window.location.href = "dashboard.html";
-    }
+    // Función para cargar los usuarios en el dropdown
+    const loadUsers = async () => {
+      try {
+        const response = await fetch('/api/users', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem("token")}`,
+          }
+        });
+        const users = await response.json();
 
-    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    const sortedTasks = tasks
-      .filter(t => t.deadline)
-      .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+        // Llenar el dropdown con los usuarios
+        const assignedTo = document.getElementById("assignedTo");
+        users.forEach(user => {
+          const option = document.createElement("option");
+          option.value = user.id;
+          option.textContent = user.name;
+          assignedTo.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error cargando los usuarios:", error);
+      }
+    };
 
-    const body = document.getElementById("calendarBody");
+    // Función para crear una nueva tarea
+    const addTaskBtn = document.getElementById("addTaskBtn");
 
-    if (sortedTasks.length === 0) {
-      body.innerHTML = `<tr><td colspan="5">No upcoming tasks found.</td></tr>`;
-    } else {
-      sortedTasks.forEach(task => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${task.deadline}</td>
-          <td>${task.title}</td>
-          <td>${task.project}</td>
-          <td>${task.assignedTo}</td>
-          <td class="status-${task.status.replace(" ", "\\ ")}">${task.status}</td>
-        `;
-        body.appendChild(row);
-      });
-    }
+    addTaskBtn.addEventListener("click", async () => {
+      const title = document.getElementById("taskTitle").value;
+      const userId = document.getElementById("assignedTo").value;
+      const deadline = document.getElementById("deadline").value;
+      const progress = parseInt(document.getElementById("progress").value) || 0;
+      const status = document.getElementById("status").value;
+
+      if (!title || !userId || !deadline || !status) {
+        alert("Por favor completa todos los campos.");
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/createtask', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem("token")}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            project_id: 1,  // Siempre asignamos el proyecto con id 1 por defecto
+            title,
+            user_id: userId,
+            date: deadline,
+            status,
+            progress,
+            completed: false,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert("Tarea creada con éxito.");
+          loadTasks();  // Recargamos las tareas
+        } else {
+          alert(`Error: ${data.message}`);
+        }
+      } catch (error) {
+        alert("Hubo un error al crear la tarea.");
+        console.error(error);
+      }
+    });
+
+    // Función para cargar todas las tareas
+    const taskTableBody = document.getElementById("taskTableBody");
+
+    const loadTasks = async () => {
+      try {
+        const response = await fetch('/api/tasks', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem("token")}`,
+          }
+        });
+        const tasks = await response.json();
+
+        taskTableBody.innerHTML = ""; // Limpiar tabla antes de agregar las tareas
+
+        tasks.forEach(task => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${task.title}</td>
+            <td>${task.assigned_to.name}</td>
+            <td>${task.date}</td>
+            <td>${task.status}</td>
+            <td>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${task.progress}%"></div>
+              </div>
+              <small>${task.progress}%</small>
+            </td>
+          `;
+          taskTableBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error("Error al cargar las tareas:", error);
+      }
+    };
+
+    // Inicialización
+    document.addEventListener("DOMContentLoaded", () => {
+      loadUsers();  // Cargar los usuarios
+      loadTasks();  // Cargar las tareas
+    });
   </script>
+
 </body>
+
 </html>

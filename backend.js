@@ -31,27 +31,22 @@ const apiCall = async (route, method = "GET", body = null, auth = true) => {
 
 const AuthAPI = {
     login: async (email, password) => {
-        console.log("Llamando API de login...");
-
         const data = await apiCall("/login", "POST", { email, password }, false);
-        console.log("Respuesta de login:", data);
-
         localStorage.setItem("token", data.token);
-
+    
         try {
             const user = await AuthAPI.me();
-            console.log("Datos del usuario obtenidos con /me:", user);
-
+    
             localStorage.setItem("user_id", user.id);
             localStorage.setItem("user_name", user.name);
             localStorage.setItem("user_email", user.email);
-
+            localStorage.setItem("user_role", user.role);
+    
             return { token: data.token, user };
         } catch (error) {
-            console.error("Error al obtener /me:", error);
             throw new Error("No se pudo obtener la información del usuario.");
         }
-    },
+    },    
 
     register: async (name, email, password, confirm) => {
         await apiCall("/register", "POST", {

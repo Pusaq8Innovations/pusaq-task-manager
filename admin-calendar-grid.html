@@ -29,43 +29,52 @@
   </div>
   <div class="calendar" id="calendarGrid"></div>
 
+  <script src="backend.js"></script>
   <script>
-    const currentUser = sessionStorage.getItem("currentUser");
-    if (!currentUser) {
-      alert("Please log in.");
-      window.location.href = "index.html";
-    }
+    const currentUser = localStorage.getItem("user_name");
+    const userRole = localStorage.getItem("user_role");
 
-    const profile = JSON.parse(localStorage.getItem(currentUser));
-    if (!profile || profile.role !== "admin") {
+    if (!currentUser || userRole !== "admin") {
       alert("Access denied: Admins only.");
       window.location.href = "dashboard.html";
     }
 
-    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-
-    const users = [...new Set(tasks.map(t => t.assignedTo))];
-    const projects = [...new Set(tasks.map(t => t.project))];
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+    let allTasks = [];
 
     const userFilter = document.getElementById("userFilter");
     const projectFilter = document.getElementById("projectFilter");
 
-    users.forEach(u => {
-      const opt = document.createElement("option");
-      opt.value = u;
-      opt.textContent = u;
-      userFilter.appendChild(opt);
-    });
+    async function initialize() {
+      try {
+        const [users, projects, tasks] = await Promise.all([
+          UserAPI.getAll(),
+          ProjectAPI.getAll(),
+          TaskAPI.getAll()
+        ]);
+        allTasks = tasks;
 
-    projects.forEach(p => {
-      const opt = document.createElement("option");
-      opt.value = p;
-      opt.textContent = p;
-      projectFilter.appendChild(opt);
-    });
+        users.forEach(u => {
+          const opt = document.createElement("option");
+          opt.value = u.name;
+          opt.textContent = u.name;
+          userFilter.appendChild(opt);
+        });
 
-    let currentMonth = new Date().getMonth();
-    let currentYear = new Date().getFullYear();
+        projects.forEach(p => {
+          const opt = document.createElement("option");
+          opt.value = p.name;
+          opt.textContent = p.name;
+          projectFilter.appendChild(opt);
+        });
+
+        renderCalendar();
+      } catch (err) {
+        console.error("Initialization failed:", err);
+        alert("Failed to load calendar data.");
+      }
+    }
 
     function changeMonth(offset) {
       currentMonth += offset;
@@ -107,7 +116,7 @@
         dayCell.className = "day";
         dayCell.innerHTML = `<div class="date">${day}</div>`;
 
-        const filtered = tasks.filter(task => {
+        const filtered = allTasks.filter(task => {
           return task.deadline === dateStr &&
                  (!userFilter.value || task.assignedTo === userFilter.value) &&
                  (!projectFilter.value || task.project === projectFilter.value);
@@ -115,7 +124,7 @@
 
         filtered.forEach(task => {
           const badge = document.createElement("div");
-          badge.className = `badge status-${task.status.replace(" ", "\\ ")}`;
+          badge.className = `badge status-${task.status.replace(/\s/g, "\\ ")}`;
           badge.innerHTML = `${task.title} <span style="opacity:0.7;">(${task.assignedTo})</span>`;
 
           const tooltip = document.createElement("div");
@@ -136,7 +145,7 @@
       }
     }
 
-    renderCalendar();
+    initialize();
   </script>
 </body>
 </html>

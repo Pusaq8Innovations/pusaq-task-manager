@@ -35,11 +35,7 @@
       <input type="text" id="taskTitle" placeholder="Task Title" />
       <select id="assignedTo">
         <option value="">Assign to...</option>
-        <option>Ari</option>
-        <option>Issy</option>
-        <option>Vicho</option>
-        <option>Tania</option>
-        <option>Andres</option>
+        <!-- Los usuarios se llenarán dinámicamente aquí -->
       </select>
       <input type="date" id="deadline" />
       <input type="number" id="progress" placeholder="Progress (%)" min="0" max="100" />
@@ -49,7 +45,7 @@
         <option>Blocked</option>
         <option>Done</option>
       </select>
-      <button>Add Task</button>
+      <button id="addTaskBtn">Add Task</button>
     </div>
 
     <!-- Task overview -->
@@ -66,46 +62,125 @@
           </tr>
         </thead>
         <tbody id="taskTableBody">
-          <!-- Ejemplo estático -->
-          <tr>
-            <td>Diseñar wireframes</td>
-            <td>Issy</td>
-            <td>2025-05-01</td>
-            <td>In Progress</td>
-            <td>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: 45%"></div>
-              </div>
-              <small>45%</small>
-            </td>
-          </tr>
-          <tr>
-            <td>Revisión final</td>
-            <td>Vicho</td>
-            <td>2025-05-10</td>
-            <td>Not Started</td>
-            <td>
-              <div class="progress-bar">
-                <div class="progress-fill" style="width: 0%"></div>
-              </div>
-              <small>0%</small>
-            </td>
-          </tr>
+          <!-- Las tareas se llenarán dinámicamente aquí -->
         </tbody>
       </table>
     </div>
 
   </div>
+  <script src="backend.js"></script>
+
   <script>
     // Validación simple de sesión
     const token = localStorage.getItem("token");
-  
+
     if (!token) {
       alert("⚠️ You are not logged in. Redirecting to login page...");
       window.location.href = "index.html";
     }
+
+    // Función para cargar los usuarios en el dropdown
+    const loadUsers = async () => {
+      try {
+        const users = await UserAPI.getAll(); // Usamos UserAPI para obtener los usuarios
+
+        // Llenar el dropdown con los usuarios
+        const assignedTo = document.getElementById("assignedTo");
+        // Asegurarse de limpiar las opciones existentes antes de añadir las nuevas
+        assignedTo.innerHTML = "<option value=''>Assign to...</option>";
+
+        users.forEach(user => {
+          const option = document.createElement("option");
+          option.value = user.id; // Asegúrate de que cada usuario tenga un ID
+          option.textContent = user.name; // Usamos el nombre del usuario para mostrarlo
+          assignedTo.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error cargando los usuarios:", error);
+      }
+    };
+
+    // Función para crear una nueva tarea
+    const addTaskBtn = document.getElementById("addTaskBtn");
+
+    addTaskBtn.addEventListener("click", async () => {
+  const title = document.getElementById("taskTitle").value;
+  const userId = document.getElementById("assignedTo").value;
+  const deadline = document.getElementById("deadline").value;
+  const progress = parseInt(document.getElementById("progress").value) || 0;
+  const status = document.getElementById("status").value.toLowerCase().replace(/ /g, "_"); // Aseguramos que el status esté en minúsculas y con guion bajo
+
+  if (!title || !userId || !deadline || !status) {
+    alert("Por favor completa todos los campos.");
+    return;
+  }
+
+  const taskData = {
+    project_id: 1,  // Siempre asignamos el proyecto con id 1 por defecto
+    title,
+    user_id: parseInt(userId),  // Convertimos a número
+    date: deadline,
+    status,  // Usamos el status con el formato correcto
+    progress,
+    completed: false,
+  };
+
+  try {
+    console.log("Enviando datos de la tarea:", taskData);  // Log para verificar los datos antes de enviarlos
+
+    const response = await TaskAPI.create(taskData);
+
+    console.log("Respuesta de la API:", response);  // Mostrar la respuesta completa
+
+    if (response) {
+      alert("Tarea creada con éxito.");
+      loadTasks();  // Recargamos las tareas
+    } else {
+      alert("Error al crear la tarea.");
+    }
+  } catch (error) {
+    console.error("Error al crear la tarea:", error);
+    alert("Hubo un error al crear la tarea. Revisa la consola para más detalles.");
+  }
+});
+
+    // Función para cargar todas las tareas
+    const taskTableBody = document.getElementById("taskTableBody");
+
+    const loadTasks = async () => {
+      try {
+        const tasks = await TaskAPI.getAll();
+
+        taskTableBody.innerHTML = ""; // Limpiar tabla antes de agregar las tareas
+
+        tasks.forEach(task => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${task.title}</td>
+            <td>${task.assigned_to.name}</td>
+            <td>${task.date}</td>
+            <td>${task.status}</td>
+            <td>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: ${task.progress}%"></div>
+              </div>
+              <small>${task.progress}%</small>
+            </td>
+          `;
+          taskTableBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error("Error al cargar las tareas:", error);
+      }
+    };
+
+    // Inicialización
+    document.addEventListener("DOMContentLoaded", () => {
+      loadUsers();  // Cargar los usuarios
+      loadTasks();  // Cargar las tareas
+    });
   </script>
-  
+
 </body>
 
 </html>
