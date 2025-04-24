@@ -4,113 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Your Profile - Pusaq</title>
-  <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #022f60;
-      margin: 0;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: white;
-      padding: 1rem 2rem;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .topbar img {
-      height: 40px;
-    }
-
-    .topbar .nav-links {
-      display: flex;
-      gap: 1rem;
-    }
-
-    .topbar .nav-links a {
-      color: #022f60;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
-    h1 {
-      text-align: center;
-      color: white;
-      margin: 2rem 0 1rem;
-    }
-
-    .profile-box {
-      max-width: 400px;
-      margin: 0 auto;
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-      text-align: center;
-    }
-
-    .profile-box img {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      object-fit: cover;
-      margin-bottom: 1rem;
-      border: 3px solid #0271ff;
-    }
-
-    input[type="file"],
-    input[type="text"],
-    input[readonly],
-    button,
-    textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 6px;
-      font-size: 1rem;
-    }
-
-    input, input[readonly], textarea {
-      border: 1px solid #ccc;
-    }
-
-    button {
-      background-color: #0271ff;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    button:hover {
-      background-color: #025bd2;
-    }
-
-    textarea {
-      resize: none;
-      height: 60px;
-    }
-
-    @media (max-width: 768px) {
-      .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .topbar .nav-links {
-        flex-direction: column;
-        width: 100%;
-        margin-top: 1rem;
-      }
-
-      .profile-box {
-        margin: 1rem;
-        padding: 1.5rem;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="styles/profile.css">
 </head>
 <body>
 
@@ -130,90 +24,12 @@
     <input type="text" id="displayName" placeholder="Your name" />
     <input type="text" id="role" readonly />
     <input type="text" id="password" readonly value="Auto-generated" />
-
     <textarea id="userComment" placeholder="Floating message for login page..."></textarea>
 
-    <button onclick="saveProfile()">💾 Save Profile</button>
-    <button onclick="goToDashboard()">📋 Go to Dashboard</button>
-    <button onclick="logout()">🚪 Logout</button>
+    <button>💾 Save Profile</button>
+    <button>📋 Go to Dashboard</button>
+    <button>🚪 Logout</button>
   </div>
 
-  <script>
-const API_BASE = "https://tasks.pusaq8.com/public/api";
- const currentUser = sessionStorage.getItem("currentUser");
-
-    if (!currentUser) {
-      alert("Please log in.");
-      window.location.href = "index.html";
-    }
-
-    const avatar = document.getElementById("avatar");
-    const displayName = document.getElementById("displayName");
-    const role = document.getElementById("role");
-    const imageUpload = document.getElementById("imageUpload");
-    const commentInput = document.getElementById("userComment");
-
-    let profileData = {};
-
-    async function loadProfile() {
-      const res = await fetch(`${API_BASE}/users/${currentUser}`);
-      profileData = await res.json();
-
-      displayName.value = profileData.name || currentUser;
-      role.value = profileData.role || "user";
-      avatar.src = profileData.image || "https://via.placeholder.com/100";
-
-      // Load comment from localStorage
-      const savedComment = localStorage.getItem(`comment_${currentUser}`);
-      if (savedComment) {
-        commentInput.value = savedComment;
-      }
-    }
-
-    imageUpload.addEventListener("change", function () {
-      const file = this.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        avatar.src = e.target.result;
-        profileData.image = e.target.result;
-      };
-      reader.readAsDataURL(file);
-    });
-
-    async function saveProfile() {
-      profileData.name = displayName.value;
-
-      // Save comment
-      const comment = commentInput.value.trim();
-      localStorage.setItem(`comment_${currentUser}`, comment);
-
-      const res = await fetch(`${API_BASE}/users/${currentUser}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(profileData)
-      });
-
-      if (res.ok) {
-        alert("✅ Profile updated!");
-        loadProfile();
-      } else {
-        alert("❌ Failed to save.");
-      }
-    }
-
-    function goToDashboard() {
-      window.location.href = role.value === "admin" ? "admin.html" : "dashboard.html";
-    }
-
-    function logout() {
-      sessionStorage.clear();
-      window.location.href = "index.html";
-    }
-
-    loadProfile();
-  </script>
 </body>
 </html>

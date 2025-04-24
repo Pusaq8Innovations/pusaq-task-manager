@@ -1,0 +1,105 @@
+body {
+  font-family: 'Montserrat', sans-serif;
+  background-color: #022f60;
+  margin: 0;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: white;
+  padding: 1rem 2rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.topbar img {
+  height: 40px;
+}
+
+.topbar .nav-links {
+  display: flex;
+  gap: 1rem;
+}
+
+.topbar .nav-links a {
+  color: #022f60;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+h1 {
+  text-align: center;
+  color: white;
+  margin: 2rem 0 1rem;
+}
+
+.profile-box {
+  max-width: 400px;
+  margin: 0 auto;
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.profile-box img {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1rem;
+  border: 3px solid #0271ff;
+}
+
+input[type="file"],
+input[type="text"],
+input[readonly],
+button,
+textarea {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+input, input[readonly], textarea {
+  border: 1px solid #ccc;
+}
+
+button {
+  background-color: #0271ff;
+  color: white;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+button:hover {
+  background-color: #025bd2;
+}
+
+textarea {
+  resize: none;
+  height: 60px;
+}
+
+@media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .topbar .nav-links {
+    flex-direction: column;
+    width: 100%;
+    margin-top: 1rem;
+  }
+
+  .profile-box {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+}

@@ -1,199 +1,130 @@
-const baseurl = "https://tasks.pusaq8.com/public/api";
+// ========== Configuración base ==========
 
-//public api
+const API_BASE_URL = "https://tasks.pusaq8.com/public/api";
 
-function login() {
-    const route = baseurl + "/login";
-    const headers = {
-        "Content-Type": "application/json",
+const getToken = () => localStorage.getItem("token");
+
+const buildHeaders = (token) => ({
+    "Content-Type": "application/json",
+    ...(token && { "authorization": "Bearer " + token })
+});
+
+const apiCall = async (route, method = "GET", body = null, auth = true) => {
+    const token = auth ? getToken() : null;
+    const options = {
+        method,
+        headers: buildHeaders(token),
+        ...(method !== "GET" && body ? { body: JSON.stringify(body) } : {})
     };
 
-    const body = {
-        "email": document.getElementById("email").value,
-        "password": document.getElementById("password").value
+    try {
+        const response = await fetch(API_BASE_URL + route, options);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return await response.json();
+    } catch (err) {
+        console.error("API Error:", err);
+        throw err;
     }
+};
 
-    fetch(route, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(body)
-    })
-        .then(response => {
-            if (response.status === 200) {
-                return response.json();
-            } else {
-                throw new Error("Login failed");
-            }
-        })
-        .then(data => {
-            localStorage.setItem("token", data.token);
-            localStorage.setItem("user_id", data.user.id);
-            localStorage.setItem("user_name", data.user.name);
-            localStorage.setItem("user_email", data.user.email);
-            window.location.href = "index.html";
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("Login failed. Please check your credentials.");
+// ========== Autenticación ==========
+
+const AuthAPI = {
+    login: async (email, password) => {
+        console.log("Llamando API de login...");
+
+        const data = await apiCall("/login", "POST", { email, password }, false);
+        console.log("Respuesta de login:", data);
+
+        localStorage.setItem("token", data.token);
+
+        try {
+            const user = await AuthAPI.me();
+            console.log("Datos del usuario obtenidos con /me:", user);
+
+            localStorage.setItem("user_id", user.id);
+            localStorage.setItem("user_name", user.name);
+            localStorage.setItem("user_email", user.email);
+
+            return { token: data.token, user };
+        } catch (error) {
+            console.error("Error al obtener /me:", error);
+            throw new Error("No se pudo obtener la información del usuario.");
+        }
+    },
+
+    register: async (name, email, password, confirm) => {
+        await apiCall("/register", "POST", {
+            name,
+            role: "user",
+            email,
+            password,
+            password_confirmation: confirm
+        }, false);
+        return AuthAPI.login(email, password);
+    },
+
+    logout: async () => {
+        await apiCall("/logout", "POST");
+        localStorage.clear();
+    },
+
+    me: () => apiCall("/me")
+};
+
+// ========== Usuarios ==========
+
+const UserAPI = {
+    getAll: () => apiCall("/users")
+};
+
+// ========== Proyectos ==========
+
+const ProjectAPI = {
+    getAll: () => apiCall("/projects"),
+
+    get: (id) => apiCall(`/project?id=${id}`),
+
+    create: (name, description) =>
+        apiCall("/addproject", "POST", { name, description }),
+
+    update: (id, name, description) =>
+        apiCall("/project", "PATCH", { id, name, description }),
+
+    delete: (id) => apiCall(`/project?id=${id}`, "DELETE")
+};
+
+// ========== Tareas ==========
+
+const TaskAPI = {
+    getAll: () => apiCall("/tasks"),
+
+    create: (taskData) => apiCall("/createtask", "POST", taskData),
+
+    update: (taskData) => apiCall("/task", "PATCH", taskData),
+
+    delete: (id) => apiCall(`/task?id=${id}`, "DELETE")
+};
+
+// ========== Notas ==========
+
+const NoteAPI = {
+    getAll: () => apiCall("/notes"),
+
+    get: (id) => apiCall(`/note?id=${id}`),
+
+    create: (content, projectId) => {
+        const userId = localStorage.getItem("user_id");
+        return apiCall("/createnote", "POST", {
+            content,
+            user_id: userId,
+            project_id: projectId
         });
-}
+    },
 
-function register() {
-    const route = baseurl + "/register";
-    const headers = {
-        "Content-Type": "application/json",
-    };
+    update: (id, content) =>
+        apiCall("/note", "PATCH", { id, content }),
 
-    const body = {
-        "name": document.getElementById("name").value,
-        "role": 'user',
-        "email": document.getElementById("email").value,
-        "password": document.getElementById("password").value,
-        "password_confirmation": document.getElementById("password_confirmation").value
-    }
-
-    fetch(route, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify(body)
-    })
-        .then(response => {
-            if (response.status === 200) {
-                return response.json();
-            } else {
-                throw new Error("Registration failed");
-            }
-        })
-        .then(data => {
-            login();
-        })
-        .catch(error => {
-            console.error("Error:", error);
-            alert("Registration failed. Please check your input.");
-        });
-
-}
-
-//authenticated api
-
-function logout() {
-    const route = baseurl + "/logout";
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + localStorage.getItem("token")
-    }
-    
-
-}
-
-function getuserinfo() {
-    const route = baseurl + "/user";
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + localStorage.getItem("token")
-    }
-
-}
-
-function getprojects() {
-    const route = baseurl + "/projects";
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + localStorage.getItem("token")
-    }
-
-}
-
-function gettasks() {
-    const route = baseurl + "/tasks";
-
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + localStorage.getItem("token")
-    }
-}
-
-function getnotes() {
-    const route = baseurl + "/notes";
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + localStorage.getItem("token")
-    }
-}
-
-function getnote(id) {
-    const route = baseurl + "/note?id=" + id;
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + localStorage.getItem("token")
-    }
-
-}
-
-function createnote() {
-    const route = baseurl + "/createnote";
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + localStorage.getItem("token")
-    }
-
-    const body = {
-        "content": document.getElementById("content").value,
-        "user_id": localStorage.getItem("user_id"),
-        "project_id": document.getElementById("project_id").value,
-    }
-
-}
-
-function updatenote() {
-    const route = baseurl + "/note";
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + localStorage.getItem("token")
-    }
-
-
-}
-
-function deletenote() {
-    const route = baseurl + "/note?id=" + id;
-    const headers = {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer " + localStorage.getItem("token")
-    }
-
-}
-
-// admin api
-
-function getproject(id) {
-
-}
-
-function createproject() {
-
-}
-
-function updateproject() {
-
-}
-
-function deleteproject() {
-
-}
-
-function gettask(id) {
-
-}
-
-function createtask() {
-
-}
-
-function updatetask() {
-
-}
-
-function deletetask() {
-
-}
+    delete: (id) =>
+        apiCall(`/note?id=${id}`, "DELETE")
+};

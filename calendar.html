@@ -3,74 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Pusaq Calendar</title>
-  <style>
-    body {
-      font-family: 'Montserrat', sans-serif;
-      background-color: #f5f5f5;
-      padding: 2rem;
-      margin: 0;
-    }
-
-    h1 {
-      color: #0053A6;
-      text-align: center;
-    }
-
-    .top-right {
-      text-align: right;
-      margin-bottom: 1rem;
-    }
-
-    .top-right a {
-      background-color: #0053A6;
-      color: white;
-      padding: 10px 16px;
-      text-decoration: none;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    .calendar-table {
-      max-width: 900px;
-      margin: 2rem auto;
-      background: white;
-      padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      padding: 0.75rem;
-      border: 1px solid #ddd;
-      text-align: center;
-    }
-
-    th {
-      background-color: #0053A6;
-      color: white;
-    }
-
-    .status-Done {
-      color: green;
-    }
-
-    .status-Blocked {
-      color: red;
-    }
-
-    .status-In\ Progress {
-      color: #007bff;
-    }
-
-    .status-Not\ Started {
-      color: gray;
-    }
-  </style>
+  <link rel="stylesheet" href="styles/calendar.css">
 </head>
 <body>
 
@@ -79,6 +12,7 @@
   </div>
 
   <h1>📅 Your Calendar</h1>
+
   <div class="calendar-table">
     <table>
       <thead>
@@ -89,38 +23,17 @@
           <th>Status</th>
         </tr>
       </thead>
-      <tbody id="calendarBody"></tbody>
+      <tbody id="calendarBody">
+        <tr>
+          <td>2025-05-01</td>
+          <td>Sample Task</td>
+          <td>Sample Project</td>
+          <td class="status-In\ Progress">In Progress</td>
+        </tr>
+        <!-- You can manually add more sample rows if needed -->
+      </tbody>
     </table>
   </div>
 
-  <script>
-    const currentUser = sessionStorage.getItem("currentUser");
-    if (!currentUser) {
-      alert("Please log in.");
-      window.location.href = "index.html";
-    }
-
-    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
-    const userTasks = tasks
-      .filter(t => t.assignedTo === currentUser && t.deadline)
-      .sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
-
-    const body = document.getElementById("calendarBody");
-
-    if (userTasks.length === 0) {
-      body.innerHTML = `<tr><td colspan="4">No upcoming tasks found.</td></tr>`;
-    } else {
-      userTasks.forEach(task => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td>${task.deadline}</td>
-          <td>${task.title}</td>
-          <td>${task.project}</td>
-          <td class="status-${task.status.replace(" ", "\\ ")}">${task.status}</td>
-        `;
-        body.appendChild(row);
-      });
-    }
-  </script>
 </body>
 </html>

@@ -1,0 +1,73 @@
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0053A6;
+    }
+
+    .top-right {
+      text-align: right;
+      margin-bottom: 1rem;
+    }
+
+    .top-right a {
+      background-color: #0053A6;
+      color: white;
+      padding: 10px 16px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 10px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .day {
+      background: white;
+      border-radius: 8px;
+      padding: 0.5rem;
+      min-height: 100px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .day .date {
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .badge {
+      font-size: 12px;
+      padding: 4px 6px;
+      margin: 2px 0;
+      border-radius: 4px;
+      color: white;
+      word-break: break-word;
+    }
+
+    .status-Done { background-color: green; }
+    .status-In\ Progress { background-color: #007bff; }
+    .status-Blocked { background-color: red; }
+    .status-Not\ Started { background-color: gray; }
+
+    .weekday-labels {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-weight: bold;
+      margin: 1rem auto 0.5rem;
+      max-width: 1000px;
+      color: #333;
+    }

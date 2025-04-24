@@ -1,151 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Who's working today? - Pusaq</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Montserrat', sans-serif;
-      background-color: #022f60;
-      color: white;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      overflow-x: hidden;
-    }
-
-    .logo {
-      margin: 3rem 0 1.5rem;
-    }
-
-    .logo img {
-      height: 80px;
-      max-width: 90%;
-    }
-
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 2rem;
-    }
-
-    .user-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 2rem;
-      max-width: 800px;
-      margin: 0 auto 3rem;
-      padding: 0 1rem;
-      z-index: 1;
-    }
-
-    .user-box {
-      text-align: center;
-      cursor: pointer;
-      color: white;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      animation: slideIn 0.5s ease;
-      z-index: 2;
-    }
-
-    .user-box img {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      border: 3px solid white;
-      transition: box-shadow 0.3s ease;
-    }
-
-    .user-box span {
-      display: block;
-      margin-top: 0.5rem;
-      font-size: 1rem;
-      font-weight: bold;
-    }
-
-    .user-box:hover img {
-      box-shadow: 0 0 15px 4px #ffff48;
-      transform: scale(1.05);
-    }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Floating background comments */
-    #floating-comments-container {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      overflow: hidden;
-      z-index: 0;
-    }
-
-    .floating-comment {
-      position: absolute;
-      color: white;
-      font-size: 1.2rem;
-      font-family: 'Courier New', monospace;
-      opacity: 0;
-      white-space: nowrap;
-      animation: fadeInOut 8s ease forwards;
-    }
-
-    @keyframes fadeInOut {
-      0% {
-        opacity: 0;
-        transform: translateY(10px);
-      }
-      10% {
-        opacity: 1;
-        transform: translateY(0);
-      }
-      90% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-    }
-
-    @media (max-width: 600px) {
-      h1 {
-        font-size: 1.4rem;
-        margin-bottom: 1rem;
-      }
-
-      .user-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .user-box img {
-        width: 80px;
-        height: 80px;
-      }
-
-      .user-box span {
-        font-size: 0.9rem;
-      }
-
-      .logo img {
-        height: 60px;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="styles/index.css">
 </head>
+
 <body>
 
   <div class="logo">
@@ -154,86 +16,69 @@
 
   <h1>Who's working today?</h1>
 
-  <div class="user-grid">
-    <div class="user-box" onclick="loginAs('Ari')">
-      <img src="https://via.placeholder.com/100" alt="Ari" />
-      <span>Ari</span>
-    </div>
-    <div class="user-box" onclick="loginAs('Issy')">
-      <img src="https://via.placeholder.com/100" alt="Issy" />
-      <span>Issy</span>
-    </div>
-    <div class="user-box" onclick="loginAs('Vicho')">
-      <img src="https://via.placeholder.com/100" alt="Vicho" />
-      <span>Vicho</span>
-    </div>
-    <div class="user-box" onclick="loginAs('Tania')">
-      <img src="https://via.placeholder.com/100" alt="Tania" />
-      <span>Tania</span>
-    </div>
-    <div class="user-box" onclick="loginAs('Andres')">
-      <img src="https://via.placeholder.com/100" alt="Andres" />
-      <span>Andres</span>
-    </div>
-    <div class="user-box" onclick="loginAs('Yannick')">
-      <img src="https://via.placeholder.com/100" alt="Yannick" />
-      <span>Yannick</span>
-    </div>
-    <div class="user-box" onclick="loginAs('Boris')">
-      <img src="https://via.placeholder.com/100" alt="Boris" />
-      <span>Boris</span>
-    </div>
-  </div>
+  <div class="user-grid"></div>
 
   <!-- Floating comments overlay -->
   <div id="floating-comments-container"></div>
 
+  <!-- Funciones de backend -->
+  <script src="backend.js"></script>
+
   <script>
-    function loginAs(name) {
-      sessionStorage.setItem("currentUser", name);
-      const isAdmin = name === "Yannick" || name === "Boris";
-      window.location.href = isAdmin ? "admin.html" : "dashboard.html";
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        console.log("Cargando usuarios...");
+        const users = await UserAPI.getAll();
+        console.log("Usuarios cargados:", users);
+        renderUsers(users);
+      } catch (err) {
+        console.error("Error al obtener usuarios:", err);
+        alert("No se pudieron cargar los usuarios.");
+      }
+    });
+
+    function renderUsers(users) {
+      const container = document.querySelector(".user-grid");
+      container.innerHTML = "";
+
+      users.forEach(user => {
+        const div = document.createElement("div");
+        div.className = "user-box";
+        div.onclick = () => promptPasswordAndLogin(user);
+
+        div.innerHTML = `
+          <img src="https://via.placeholder.com/100" alt="${user.name}" />
+          <span>${user.name}</span>
+        `;
+
+        container.appendChild(div);
+      });
     }
 
-    // ☁️ Floating Comments
-    const commentContainer = document.getElementById("floating-comments-container");
+    async function promptPasswordAndLogin(user) {
+      const password = prompt(`Ingresa la contraseña para ${user.name}:`);
+      if (!password) return;
 
-    function getAllComments() {
-      const users = ["Ari", "Issy", "Vicho", "Tania", "Andres", "Yannick", "Boris"];
-      return users.map(name => {
-        const comment = localStorage.getItem(`comment_${name}`);
-        return comment ? `${name}: ${comment}` : null;
-      }).filter(Boolean);
+      try {
+        const data = await AuthAPI.login(user.email, password);  // Autenticación
+
+        // Verificamos el rol del usuario
+        const isAdmin = data.user.role === "admin";
+
+        // Redirigimos dependiendo del rol
+        if (isAdmin) {
+          window.location.href = "admin.html";  // Redirige a la página del administrador
+        } else {
+          window.location.href = "dashboard.html";  // Redirige a la página del usuario normal
+        }
+      } catch (err) {
+        console.error("Login error:", err);
+        alert("Contraseña incorrecta.");
+      }
     }
 
-    function spawnFloatingComment(text) {
-      const el = document.createElement("div");
-      el.className = "floating-comment";
-      el.style.top = Math.random() * 80 + "%";
-      el.style.left = Math.random() * 80 + "%";
-      commentContainer.appendChild(el);
-
-      let i = 0;
-      const type = setInterval(() => {
-        el.textContent += text[i++];
-        if (i >= text.length) clearInterval(type);
-      }, 80);
-
-      setTimeout(() => {
-        el.remove();
-      }, 8000);
-    }
-
-    function loopFloatingComments() {
-      const comments = getAllComments();
-      if (!comments.length) return;
-      setInterval(() => {
-        const text = comments[Math.floor(Math.random() * comments.length)];
-        spawnFloatingComment(text);
-      }, 4000);
-    }
-
-    loopFloatingComments();
   </script>
+
 </body>
+
 </html>

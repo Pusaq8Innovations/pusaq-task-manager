@@ -1,166 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pusaq Admin Dashboard</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Montserrat', sans-serif;
-      background-color: #022f60;
-    }
-
-    .topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: white;
-      padding: 1rem 2rem;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    }
-
-    .topbar img {
-      height: 40px;
-    }
-
-    .topbar .nav-links a {
-      color: #022f60;
-      margin-left: 1rem;
-      font-weight: bold;
-      text-decoration: none;
-    }
-
-    h1 {
-      text-align: center;
-      color: white;
-      margin: 2rem 0 1rem;
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: 0 auto;
-      padding: 1rem;
-    }
-
-    .card {
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-      margin-bottom: 2rem;
-    }
-
-    .card h2 {
-      margin-top: 0;
-      color: #022f60;
-    }
-
-    input, select, button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 6px;
-      font-size: 1rem;
-    }
-
-    input, select {
-      border: 1px solid #ccc;
-    }
-
-    button {
-      background-color: #0271ff;
-      color: white;
-      font-weight: bold;
-      border: none;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    button:hover {
-      background-color: #025bd2;
-    }
-
-    table {
-      width: 100%;
-      margin-top: 1rem;
-      border-collapse: collapse;
-    }
-
-    th, td {
-      text-align: center;
-      padding: 12px;
-      border-bottom: 1px solid #eee;
-    }
-
-    th {
-      background-color: #0271ff;
-      color: white;
-    }
-
-    .progress-bar {
-      height: 10px;
-      background-color: #ddd;
-      border-radius: 5px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background-color: #0271ff;
-      width: 0%;
-      transition: width 0.4s;
-    }
-
-    @media (max-width: 768px) {
-      .topbar {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .nav-links {
-        display: flex;
-        flex-direction: column;
-        width: 100%;
-        margin-top: 1rem;
-      }
-
-      .nav-links a {
-        margin: 0.5rem 0;
-      }
-
-      .card {
-        padding: 1.5rem;
-        margin: 1rem 0;
-      }
-
-      table, thead, tbody, th, td, tr {
-        display: block;
-        width: 100%;
-      }
-
-      thead {
-        display: none;
-      }
-
-      td {
-        position: relative;
-        padding-left: 50%;
-        border-bottom: 1px solid #ddd;
-        margin-bottom: 1rem;
-      }
-
-      td::before {
-        content: attr(data-label);
-        position: absolute;
-        left: 1rem;
-        top: 10px;
-        font-weight: bold;
-        color: #333;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="styles/admin.css">
 </head>
+
 <body>
 
   <div class="topbar">
@@ -175,11 +22,11 @@
 
   <div class="container">
 
-    <!-- Floating comment input -->
+    <!-- Floating login message -->
     <div class="card">
       <h2>Floating Login Message 💬</h2>
       <input type="text" id="floatingMessage" placeholder="Type your message for the login screen..." />
-      <button onclick="saveFloatingMessage()">💾 Save Message</button>
+      <button>💾 Save Message</button>
     </div>
 
     <!-- Task creation -->
@@ -202,7 +49,7 @@
         <option>Blocked</option>
         <option>Done</option>
       </select>
-      <button onclick="addTask()">Add Task</button>
+      <button>Add Task</button>
     </div>
 
     <!-- Task overview -->
@@ -218,100 +65,47 @@
             <th>Progress</th>
           </tr>
         </thead>
-        <tbody id="taskTableBody"></tbody>
+        <tbody id="taskTableBody">
+          <!-- Ejemplo estático -->
+          <tr>
+            <td>Diseñar wireframes</td>
+            <td>Issy</td>
+            <td>2025-05-01</td>
+            <td>In Progress</td>
+            <td>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 45%"></div>
+              </div>
+              <small>45%</small>
+            </td>
+          </tr>
+          <tr>
+            <td>Revisión final</td>
+            <td>Vicho</td>
+            <td>2025-05-10</td>
+            <td>Not Started</td>
+            <td>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%"></div>
+              </div>
+              <small>0%</small>
+            </td>
+          </tr>
+        </tbody>
       </table>
     </div>
+
   </div>
-
   <script>
-const API_BASE = "https://tasks.pusaq8.com/public/api";
-const currentUser = sessionStorage.getItem("currentUser");
-
-    if (!currentUser) {
-      alert("Please log in.");
+    // Validación simple de sesión
+    const token = localStorage.getItem("token");
+  
+    if (!token) {
+      alert("⚠️ You are not logged in. Redirecting to login page...");
       window.location.href = "index.html";
     }
-
-    // Load saved message
-    const messageInput = document.getElementById("floatingMessage");
-    const savedMessage = localStorage.getItem(`comment_${currentUser}`);
-    if (savedMessage) {
-      messageInput.value = savedMessage;
-    }
-
-    function saveFloatingMessage() {
-      const msg = messageInput.value.trim();
-      localStorage.setItem(`comment_${currentUser}`, msg);
-      alert("✅ Message saved! It will show up on the login screen.");
-    }
-
-    async function fetchTasks() {
-      const res = await fetch(`${API_BASE}/tasks`);
-      const tasks = await res.json();
-      renderTasks(tasks);
-    }
-
-    function renderTasks(tasks) {
-      const tbody = document.getElementById("taskTableBody");
-      tbody.innerHTML = "";
-      tasks.forEach(task => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-          <td data-label="Task">${task.title}</td>
-          <td data-label="Assigned">${task.assigned_to}</td>
-          <td data-label="Deadline">${task.deadline}</td>
-          <td data-label="Status">${task.status}</td>
-          <td data-label="Progress">
-            <div class="progress-bar">
-              <div class="progress-fill" style="width: ${task.progress || 0}%"></div>
-            </div>
-            <small>${task.progress || 0}%</small>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
-    }
-
-    async function addTask() {
-      const title = document.getElementById("taskTitle").value;
-      const assigned_to = document.getElementById("assignedTo").value;
-      const deadline = document.getElementById("deadline").value;
-      const status = document.getElementById("status").value;
-      const progress = parseInt(document.getElementById("progress").value) || 0;
-
-      if (!title || !assigned_to || !deadline) {
-        alert("Please fill in all fields.");
-        return;
-      }
-
-      const response = await fetch(`${API_BASE}/tasks`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title,
-          assigned_to,
-          deadline,
-          status,
-          progress
-        })
-      });
-
-      if (response.ok) {
-        alert("✅ Task created!");
-        fetchTasks();
-        document.getElementById("taskTitle").value = "";
-        document.getElementById("assignedTo").value = "";
-        document.getElementById("deadline").value = "";
-        document.getElementById("progress").value = "";
-        document.getElementById("status").value = "Not Started";
-      } else {
-        alert("❌ Failed to create task.");
-      }
-    }
-
-    fetchTasks();
   </script>
+  
 </body>
+
 </html>
