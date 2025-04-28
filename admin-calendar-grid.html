@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <title>Pusaq Admin Calendar Grid</title>
   <link rel="stylesheet" href="styles/admin-calendar-grid.css">
 </head>
+
 <body>
 
   <div class="top-bar">
     <div class="nav-buttons">
-      <button onclick="changeMonth(-1)">← Prev</button>
-      <button onclick="changeMonth(1)">Next →</button>
+      <button id="prevMonthBtn">← Prev</button>
+      <button id="nextMonthBtn">Next →</button>
     </div>
     <div class="filters">
       <select id="userFilter" onchange="renderCalendar()">
@@ -20,54 +22,90 @@
         <option value="">📁 All Projects</option>
       </select>
     </div>
-    <a href="admin.html" style="background:#0053A6;color:white;padding:8px 14px;border-radius:6px;text-decoration:none;">⬅ Admin Dashboard</a>
+    <a href="admin.html"
+      style="background:#0053A6;color:white;padding:8px 14px;border-radius:6px;text-decoration:none;">⬅ Admin
+      Dashboard</a>
   </div>
 
   <h1 id="monthTitle">📅 Calendar</h1>
   <div class="weekday-labels">
-    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
+    <div>Sun</div>
+    <div>Mon</div>
+    <div>Tue</div>
+    <div>Wed</div>
+    <div>Thu</div>
+    <div>Fri</div>
+    <div>Sat</div>
   </div>
   <div class="calendar" id="calendarGrid"></div>
 
-  <script src="backend.js"></script>
-  <script>
-    const currentUser = localStorage.getItem("user_name");
-    const userRole = localStorage.getItem("user_role");
+  <script type="module">
+    import { auth, getAllUsers, getAllProjects, getAllTasks } from './firebase.js';
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-    if (!currentUser || userRole !== "admin") {
+    // Seguridad: solo admins
+    const currentUserName = localStorage.getItem("user_name");
+    const currentUserRole = localStorage.getItem("user_role");
+    if (!currentUserName || currentUserRole !== "admin") {
       alert("Access denied: Admins only.");
       window.location.href = "dashboard.html";
     }
 
+    // También chequeamos sesión con Firebase Auth
+    onAuthStateChanged(auth, user => {
+      if (!user) {
+        alert("⚠️ You are not logged in.");
+        window.location.href = "index.html";
+      }
+    });
+
     let currentMonth = new Date().getMonth();
     let currentYear = new Date().getFullYear();
-    let allTasks = [];
+    let allTasks = [];    // array de tareas
+    let userMap = {};     // id → nombre
+    let projectMap = {};  // id → título
 
     const userFilter = document.getElementById("userFilter");
     const projectFilter = document.getElementById("projectFilter");
 
+    // Inicialización: carga usuarios, proyectos y tareas
     async function initialize() {
       try {
-        const [users, projects, tasks] = await Promise.all([
-          UserAPI.getAll(),
-          ProjectAPI.getAll(),
-          TaskAPI.getAll()
-        ]);
-        allTasks = tasks;
-
+        // 1. Usuarios
+        const users = await getAllUsers();
         users.forEach(u => {
+          userMap[u.id] = u.name;
           const opt = document.createElement("option");
-          opt.value = u.name;
+          opt.value = u.id;
           opt.textContent = u.name;
           userFilter.appendChild(opt);
         });
 
+        // 2. Proyectos
+        const projects = await getAllProjects();
         projects.forEach(p => {
+          projectMap[p.id] = p.title;
           const opt = document.createElement("option");
-          opt.value = p.name;
-          opt.textContent = p.name;
+          opt.value = p.id;
+          opt.textContent = p.title;
           projectFilter.appendChild(opt);
         });
+
+        // 3. Tareas (subcolecciones)
+        allTasks = [];
+        for (const p of projects) {
+          const tasks = await getAllTasks(p.id);
+          tasks.forEach(t => {
+            // añadimos metadatos para facilitar el render:
+            allTasks.push({
+              ...t,
+              project_id: p.id,
+              project: projectMap[p.id],
+              assignedTo: userMap[t.assigned_to] || "Unknown",
+              deadline: t.date || t.deadline || null
+            });
+          });
+        }
 
         renderCalendar();
       } catch (err) {
@@ -76,22 +114,27 @@
       }
     }
 
+    // Cambiar el mes
     function changeMonth(offset) {
       currentMonth += offset;
+
       if (currentMonth < 0) {
         currentMonth = 11;
-        currentYear -= 1;
+        currentYear -= 1; // Decrementamos el año si pasamos al mes anterior
       } else if (currentMonth > 11) {
         currentMonth = 0;
-        currentYear += 1;
+        currentYear += 1; // Incrementamos el año si pasamos al siguiente mes
       }
+
+      // Renderizar el calendario después de actualizar el mes
       renderCalendar();
     }
 
+    // Rendirizar el calendario
     function renderCalendar() {
       const monthTitle = document.getElementById("monthTitle");
       const monthNames = ["January", "February", "March", "April", "May", "June",
-                          "July", "August", "September", "October", "November", "December"];
+        "July", "August", "September", "October", "November", "December"];
       monthTitle.textContent = `📅 ${monthNames[currentMonth]} ${currentYear}`;
 
       const grid = document.getElementById("calendarGrid");
@@ -102,12 +145,14 @@
       const firstWeekday = firstDay.getDay();
       const daysInMonth = lastDay.getDate();
 
+      // Crear celdas vacías al principio del mes
       for (let i = 0; i < firstWeekday; i++) {
         const empty = document.createElement("div");
         empty.className = "day";
         grid.appendChild(empty);
       }
 
+      // Crear celdas para los días del mes
       for (let day = 1; day <= daysInMonth; day++) {
         const cellDate = new Date(currentYear, currentMonth, day);
         const dateStr = cellDate.toISOString().split("T")[0];
@@ -118,8 +163,8 @@
 
         const filtered = allTasks.filter(task => {
           return task.deadline === dateStr &&
-                 (!userFilter.value || task.assignedTo === userFilter.value) &&
-                 (!projectFilter.value || task.project === projectFilter.value);
+            (!userFilter.value || task.assignedTo === userFilter.value) &&  // Filtro por usuario
+            (!projectFilter.value || task.project === projectFilter.value); // Filtro por proyecto
         });
 
         filtered.forEach(task => {
@@ -130,13 +175,13 @@
           const tooltip = document.createElement("div");
           tooltip.className = "tooltip";
           tooltip.innerHTML = `
-            <strong>${task.title}</strong><br>
-            👤 ${task.assignedTo}<br>
-            📁 ${task.project}<br>
-            🗓️ ${task.deadline}<br>
-            🏷️ ${task.status}<br>
-            ✏️ ${task.note || "No note"}
-          `;
+        <strong>${task.title}</strong><br>
+        👤 ${task.assignedTo}<br>
+        📁 ${task.project}<br>
+        🗓️ ${task.deadline}<br>
+        🏷️ ${task.status}<br>
+        ✏️ ${task.note || "No note"}
+      `;
           badge.appendChild(tooltip);
           dayCell.appendChild(badge);
         });
@@ -145,7 +190,18 @@
       }
     }
 
-    initialize();
+    // Agregar los manejadores de eventos para los botones de cambio de mes
+    document.getElementById("prevMonthBtn").addEventListener("click", function() {
+      changeMonth(-1);
+    });
+
+    document.getElementById("nextMonthBtn").addEventListener("click", function() {
+      changeMonth(1);
+    });
+
+    document.addEventListener("DOMContentLoaded", initialize);
   </script>
+
 </body>
+
 </html>

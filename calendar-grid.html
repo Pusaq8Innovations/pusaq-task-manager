@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <title>Pusaq Calendar Grid</title>
@@ -13,36 +12,104 @@
     <a href="dashboard.html">⬅ Back to Dashboard</a>
   </div>
 
-  <h1>📅 Your Monthly Task Calendar</h1>
+  <h1 id="monthTitle">📅 Your Monthly Task Calendar</h1>
 
   <div class="weekday-labels">
-    <div>Sun</div>
-    <div>Mon</div>
-    <div>Tue</div>
-    <div>Wed</div>
-    <div>Thu</div>
-    <div>Fri</div>
-    <div>Sat</div>
+    <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
   </div>
 
-  <div class="calendar" id="calendarGrid">
-    <!-- Example static calendar cells -->
-    <div class="day"></div>
-    <div class="day"></div>
-    <div class="day">
-      <div class="date">1</div>
-      <div class="badge status-In\ Progress">Task A</div>
-    </div>
-    <div class="day">
-      <div class="date">2</div>
-    </div>
-    <div class="day">
-      <div class="date">3</div>
-      <div class="badge status-Done">Task B</div>
-    </div>
-    <!-- Add more static days if needed -->
-  </div>
+  <div class="calendar" id="calendarGrid"></div>
+
+  <script type="module">
+    import { auth, getAllTasksByUser } from './firebase.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+
+    const currentUser = localStorage.getItem("user_name");
+    const currentUserId = localStorage.getItem("user_uid");
+
+    if (!currentUser || !currentUserId) {
+      alert("Please log in.");
+      window.location.href = "index.html";
+    }
+
+    let currentMonth = new Date().getMonth();
+    let currentYear = new Date().getFullYear();
+    let userTasks = [];
+
+    // Inicializar calendario
+    async function initialize() {
+      try {
+        const tasks = await getAllTasksByUser(currentUserId);
+        userTasks = tasks.map(t => ({
+          ...t,
+          deadline: t.date || t.deadline || null
+        }));
+        renderCalendar();
+      } catch (err) {
+        console.error("Error loading tasks:", err);
+        alert("Error loading tasks.");
+      }
+    }
+
+    // Renderizar calendario
+    function renderCalendar() {
+      const monthTitle = document.getElementById("monthTitle");
+      const monthNames = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
+      monthTitle.textContent = `📅 ${monthNames[currentMonth]} ${currentYear}`;
+
+      const grid = document.getElementById("calendarGrid");
+      grid.innerHTML = "";
+
+      const firstDay = new Date(currentYear, currentMonth, 1);
+      const lastDay = new Date(currentYear, currentMonth + 1, 0);
+      const firstWeekday = firstDay.getDay();
+      const daysInMonth = lastDay.getDate();
+
+      // Espacios vacíos al inicio
+      for (let i = 0; i < firstWeekday; i++) {
+        const empty = document.createElement("div");
+        empty.className = "day";
+        grid.appendChild(empty);
+      }
+
+      // Días reales
+      for (let day = 1; day <= daysInMonth; day++) {
+        const cellDate = new Date(currentYear, currentMonth, day);
+        const dateStr = cellDate.toISOString().split("T")[0];
+
+        const dayCell = document.createElement("div");
+        dayCell.className = "day";
+        dayCell.innerHTML = `<div class="date">${day}</div>`;
+
+        const tasksForDay = userTasks.filter(task => {
+          return task.deadline === dateStr;
+        });
+
+        tasksForDay.forEach(task => {
+          const badge = document.createElement("div");
+          badge.className = `badge status-${(task.status || 'Pending').replace(/\s/g, "\\ ")}`;
+          badge.innerHTML = `${task.title}`;
+
+          const tooltip = document.createElement("div");
+          tooltip.className = "tooltip";
+          tooltip.innerHTML = `
+            <strong>${task.title}</strong><br>
+            🗓️ ${task.deadline || 'No Date'}<br>
+            🏷️ ${task.status || 'Pending'}<br>
+            ✏️ ${task.note || 'No note'}
+          `;
+          badge.appendChild(tooltip);
+          dayCell.appendChild(badge);
+        });
+
+        grid.appendChild(dayCell);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", initialize);
+
+  </script>
 
 </body>
-
 </html>

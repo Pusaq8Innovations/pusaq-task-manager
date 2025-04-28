@@ -26,56 +26,87 @@
     <input type="text" id="password" readonly value="Auto-generated" />
     <textarea id="userComment" placeholder="Floating message for login page..."></textarea>
 
-    <button onclick="saveProfile()">💾 Save Profile</button>
-    <button onclick="goToDashboard()">📋 Go to Dashboard</button>
-    <button onclick="logout()">🚪 Logout</button>
+    <button id="saveProfileBtn">💾 Save Profile</button>
+    <button id="goToDashboardBtn">📋 Go to Dashboard</button>
+    <button id="logoutBtn">🚪 Logout</button>
   </div>
 
-  <script src="backend.js"></script>
-  <script>
-    async function loadProfile() {
+  <script type="module">
+    import {
+      auth,
+      getUser,
+      updateUser
+    } from './firebase.js';
+    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+
+    // Elementos del DOM
+    const displayNameInput = document.getElementById('displayName');
+    const roleInput = document.getElementById('role');
+    const commentTextarea = document.getElementById('userComment');
+    const saveProfileBtn = document.getElementById('saveProfileBtn');
+    const goToDashboardBtn = document.getElementById('goToDashboardBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    // Carga inicial del perfil
+    function loadProfile(uiUser) {
+      getUser(uiUser.uid)
+        .then(profile => {
+          displayNameInput.value = profile.name;
+          roleInput.value = profile.role;
+          commentTextarea.value = localStorage.getItem(`comment_${uiUser.uid}`) || '';
+          
+          // Agregar evento de click para el botón
+          goToDashboardBtn.addEventListener('click', () => {
+            if (profile.role === 'admin') {
+              window.location.href = 'admin.html';  // Redirige a admin.html si es admin
+            } else {
+              window.location.href = 'dashboard.html';  // Redirige a dashboard.html si no es admin
+            }
+          });
+        })
+        .catch(err => {
+          console.error('Failed to load user:', err);
+          alert('Failed to load profile.');
+        });
+    }
+
+    // Observador de estado de autenticación
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        loadProfile(user);
+      } else {
+        window.location.href = 'index.html';  // Si no hay usuario logueado, redirige al login
+      }
+    });
+
+    // Guardar cambios de perfil
+    saveProfileBtn.addEventListener('click', async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+
+      const newName = displayNameInput.value.trim();
+      const newComment = commentTextarea.value.trim();
+
       try {
-        const user = await AuthAPI.me();
-
-        document.getElementById("displayName").value = user.name;
-        document.getElementById("role").value = user.role;
-        document.getElementById("userComment").value = localStorage.getItem(`comment_${user.name}`) || "";
-
-        // Puedes integrar carga de avatar si la API lo permite
+        await updateUser(user.uid, { name: newName });
+        localStorage.setItem(`comment_${user.uid}`, newComment);
+        alert('✅ Profile saved!');
       } catch (err) {
-        console.error("Failed to load user:", err);
-        alert("Failed to load profile.");
-        window.location.href = "index.html";
+        console.error('Error updating profile:', err);
+        alert('Error saving profile.');
       }
-    }
+    });
 
-    function saveProfile() {
-      const name = document.getElementById("displayName").value;
-      const comment = document.getElementById("userComment").value;
-
-      const username = localStorage.getItem("user_name");
-      if (username) {
-        localStorage.setItem(`comment_${username}`, comment);
-      }
-
-      alert("✅ Profile saved! (Note: Name changes are not yet sent to the server.)");
-    }
-
-    function goToDashboard() {
-      window.location.href = "dashboard.html";
-    }
-
-    async function logout() {
+    // Cerrar sesión
+    logoutBtn.addEventListener('click', async () => {
       try {
-        await AuthAPI.logout();
-        window.location.href = "index.html";
+        await signOut(auth);
+        window.location.href = 'index.html';
       } catch (err) {
-        console.error("Logout failed:", err);
-        alert("Error during logout.");
+        console.error('Logout failed:', err);
+        alert('Error during logout.');
       }
-    }
-
-    loadProfile();
+    });
   </script>
 </body>
 </html>

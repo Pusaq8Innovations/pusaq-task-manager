@@ -11,7 +11,7 @@
 <body>
 
   <div class="topbar">
-    <img src="pusaq-logo.jpeg" alt="Pusaq Logo" />
+    <img src="pusaq-logo1.jpeg" alt="Pusaq Logo" />
     <div class="nav-links">
       <a href="calendar-grid.html">📅 Calendar</a>
       <a href="profile.html" id="profileBtn">👤 Profile</a>
@@ -27,46 +27,34 @@
     </div>
   </div>
 
-  <!-- Floating comment input -->
-  <div class="card">
-    <h2>Floating Login Message 💬</h2>
-    <input type="text" id="floatingMessage" placeholder="Type your message for the login screen..." />
-    <button onclick="saveFloatingMessage()">💾 Save Message</button>
-  </div>
-
   <div class="accordion" id="taskContainer"></div>
 
-  <script src="backend.js"></script> <!-- Importar backend.js -->
+  <script type="module">
+    import { auth, getUser, getAllTasksByUser } from './firebase.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
 
-  <script>
+    // Obtener datos del usuario desde el localStorage
     const currentUser = localStorage.getItem("user_name");
-    if (!currentUser) {
+    const currentUserId = localStorage.getItem("user_uid");
+
+    // Verificar si el usuario está autenticado
+    if (!currentUser || !currentUserId) {
       alert("Please log in.");
       window.location.href = "index.html";
     }
 
+    // Mostrar el nombre de usuario en el botón de perfil
     document.getElementById("profileBtn").innerText = `👤 ${currentUser}`;
 
-    // ✅ Floating message field setup
-    const messageInput = document.getElementById("floatingMessage");
-    const savedMessage = localStorage.getItem(`comment_${currentUser}`);
-    if (savedMessage) {
-      messageInput.value = savedMessage;
-    }
-
-    function saveFloatingMessage() {
-      const msg = messageInput.value.trim();
-      localStorage.setItem(`comment_${currentUser}`, msg);
-      alert("✅ Message saved! You’ll see it on the login screen.");
-    }
-
-    // 🔧 Tasks rendering
+    // 🔧 Tareas rendering
     let userTasks = [];
 
-    async function fetchTasks() {
+    // Función para obtener las tareas del usuario
+    async function fetchTasks(userId) {
       try {
-        // Llamada a la API para obtener las tareas usando TaskAPI
-        userTasks = await TaskAPI.getAll();
+        // Llamada a la API para obtener las tareas usando Firestore
+        const tasks = await getAllTasksByUser(userId);  // Pasar el UID del usuario
+        userTasks = tasks;  // Asignar las tareas al arreglo
         renderSummary();
         renderTasks();
       } catch (err) {
@@ -75,6 +63,7 @@
       }
     }
 
+    // Función para renderizar el resumen de tareas
     function renderSummary() {
       const total = userTasks.length;
       const completed = userTasks.filter(t => t.status === "Done" || t.progress == 100).length;
@@ -84,9 +73,10 @@
       document.getElementById("summaryBar").style.width = percent + "%";
     }
 
+    // Función para renderizar las tareas
     function renderTasks() {
       const container = document.getElementById("taskContainer");
-      container.innerHTML = ""; // Clear any existing content
+      container.innerHTML = ""; // Limpiar cualquier contenido anterior
 
       userTasks.forEach(task => {
         const taskElement = document.createElement("div");
@@ -100,7 +90,9 @@
       });
     }
 
-    fetchTasks();
+    // Llamar a la función para obtener las tareas al cargar la página
+    fetchTasks(currentUserId);
+
   </script>
 
 </body>
