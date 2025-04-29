@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en"></html>
 
 <head>
   <meta charset="UTF-8" />
@@ -22,22 +22,22 @@
   <!-- Floating comments overlay -->
   <div id="floating-comments-container"></div>
 
-  <!-- Ahora usamos módulos -->
+  <!-- Now using modules -->
   <script type="module">
     import { getAllUsers, login, getUser } from './firebase.js';
 
     document.addEventListener("DOMContentLoaded", async () => {
       try {
-        console.log("Cargando usuarios...");
+        console.log("Loading users...");
         const users = await getAllUsers();
-        console.log("Usuarios cargados:", users);
+        console.log("Users loaded:", users);
         renderUsers(users);
       } catch (err) {
-        console.error("Error al obtener usuarios:", err);
+        console.error("Error fetching users:", err);
         Swal.fire({
           icon: 'error',
           title: 'Oops...',
-          text: 'No se pudieron cargar los usuarios.'
+          text: 'Failed to load users.'
         });
       }
     });
@@ -62,51 +62,43 @@
 
     async function promptPasswordAndLogin(user) {
       const { value: password } = await Swal.fire({
-        title: `Contraseña para ${user.name}`,
+        title: `Password for ${user.name}`,
         input: 'password',
-        inputLabel: 'Ingresa tu contraseña',
-        inputPlaceholder: 'Contraseña',
+        inputLabel: 'Enter your password',
+        inputPlaceholder: 'Password',
         inputAttributes: {
           maxlength: 50,
           autocapitalize: 'off',
           autocorrect: 'off'
         },
         showCancelButton: true,
-        confirmButtonText: 'Ingresar'
+        confirmButtonText: 'Login'
       });
 
-      if (!password) return; // Si canceló o no ingresó nada
+      if (!password) return; // If canceled or nothing entered
 
       try {
-        // Login a través de Firebase Auth
+        // Login via Firebase Auth
         const authUser = await login(user.email, password);
 
-        // Obtener datos completos del usuario desde Firestore
+        // Fetch full user data from Firestore
         const userData = await getUser(authUser.uid);
 
-        console.log('Usuario logueado:', userData);
-        // Guardar el UID y nombre en localStorage
+        console.log('Logged in user:', userData);
+        // Save UID and name in localStorage
         localStorage.setItem("user_uid", authUser.uid);
         localStorage.setItem("user_name", userData.name);
         localStorage.setItem("user_role", userData.role);
 
-        // Mostrar éxito
+        // Show success
         await Swal.fire({
           icon: 'success',
-          title: `¡Bienvenido, ${userData.name}!`,
+          title: `Welcome, ${userData.name}!`,
           showConfirmButton: false,
           timer: 1500
         });
 
-        // Mostrar éxito
-        await Swal.fire({
-          icon: 'success',
-          title: `¡Bienvenido, ${userData.name}!`,
-          showConfirmButton: false,
-          timer: 1500
-        });
-
-        // Redirigir según el rol
+        // Redirect based on role
         if (userData.role === "admin") {
           window.location.href = "admin.html";
         } else {
@@ -117,8 +109,8 @@
         console.error("Login error:", err);
         Swal.fire({
           icon: 'error',
-          title: 'Login fallido',
-          text: 'Contraseña incorrecta o usuario no encontrado.'
+          title: 'Login failed',
+          text: 'Incorrect password or user not found.'
         });
       }
     }
