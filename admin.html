@@ -2,196 +2,204 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pusaq Admin Dashboard</title>
-  <link rel="stylesheet" href="styles/admin.css">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pusaq Admin Dashboard</title>
+    <link rel="stylesheet" href="styles/admin.css">
 </head>
 
 <body>
 
-  <div class="topbar">
-    <img src="pusaq-logo1.jpeg" alt="Pusaq Logo" />
-    <div class="nav-links">
-      <a href="admin-calendar-grid.html">📅 Grid View</a>
-      <a href="profile.html">👤 Profile</a>
-    </div>
-  </div>
-
-  <h1>📊 Admin Dashboard</h1>
-
-  <div class="container">
-
-    <!-- Crear Proyecto -->
-    <div class="card">
-      <h2>Create New Project 🚀</h2>
-      <input type="text" id="projectTitle" placeholder="Project Title" />
-      <button id="addProjectBtn">Add Project</button>
+    <div class="topbar">
+        <img src="pusaq-logo1.jpeg" alt="Pusaq Logo" />
+        <div class="nav-links">
+            <a href="admin-calendar-grid.html">📅 Grid View</a>
+            <a href="profile.html">👤 Profile</a>
+        </div>
     </div>
 
-    <!-- Crear Tarea -->
-    <div class="card">
-      <h2>Create New Task 📋</h2>
-      <select id="projectSelect">
-        <option value="">Select Project...</option>
-      </select>
-      <input type="text" id="taskTitle" placeholder="Task Title" />
-      <select id="assignedTo">
-        <option value="">Assign to...</option>
-      </select>
-      <input type="date" id="deadline" />
-      <input type="number" id="progress" placeholder="Progress (%)" min="0" max="100" />
-      <select id="status">
-        <option>Not Started</option>
-        <option>In Progress</option>
-        <option>Blocked</option>
-        <option>Done</option>
-      </select>
-      <button id="addTaskBtn">Add Task</button>
+    <h1>📊 Admin Dashboard</h1>
+
+    <div class="container">
+
+        <div class="card">
+            <h2>Create New Project 🚀</h2>
+            <input type="text" id="projectTitle" placeholder="Project Title" />
+            <button id="addProjectBtn">Add Project</button>
+        </div>
+
+        <div class="card">
+            <h2>Create New Task 📋</h2>
+            <select id="projectSelect">
+                <option value="">Select Project...</option>
+            </select>
+            <input type="text" id="taskTitle" placeholder="Task Title" />
+            <select id="assignedTo">
+                <option value="">Assign to...</option>
+            </select>
+            <input type="date" id="deadline" />
+            <input type="number" id="progress" placeholder="Progress (%)" min="0" max="100" />
+            <select id="status">
+                <option>Not Started</option>
+                <option>In Progress</option>
+                <option>Blocked</option>
+                <option>Done</option>
+            </select>
+            <button id="addTaskBtn">Add Task</button>
+        </div>
+
+        <div class="card">
+            <h2>All Projects 📂</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Project</th>
+                        <th>Created At</th>
+                    </tr>
+                </thead>
+                <tbody id="projectTableBody"></tbody>
+            </table>
+        </div>
+
     </div>
 
-    <!-- Proyectos existentes -->
-    <div class="card">
-      <h2>All Projects 📂</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Project</th>
-            <th>Created At</th>
-          </tr>
-        </thead>
-        <tbody id="projectTableBody"></tbody>
-      </table>
-    </div>
+    <script type="module">
+        import {
+            auth,
+            getAllUsers,
+            createProject,
+            createTask,
+            getAllProjects
+        } from './firebase.js';
+        import { sendEmail } from './sendemail.js'; // Importa la función sendEmail
+        import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
 
-  </div>
+        const assignedTo = document.getElementById("assignedTo");
+        const projectSelect = document.getElementById("projectSelect");
+        const projectTableBody = document.getElementById("projectTableBody");
+        let usersData = []; // Variable para almacenar la información de los usuarios
 
-  <script type="module">
-    import {
-      auth,
-      getAllUsers,
-      createProject,
-      createTask,
-      getAllProjects
-    } from './firebase.js';
-
-    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-
-    const assignedTo = document.getElementById("assignedTo");
-    const projectSelect = document.getElementById("projectSelect");
-    const projectTableBody = document.getElementById("projectTableBody");
-
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        alert("⚠️ You are not logged in. Redirecting to login page...");
-        window.location.href = "index.html";
-      }
-    });
-
-    // Cargar usuarios
-    async function loadUsers() {
-      try {
-        const users = await getAllUsers();
-        assignedTo.innerHTML = "<option value=''>Assign to...</option>";
-
-        users.forEach(user => {
-          const option = document.createElement("option");
-          option.value = user.id;
-          option.textContent = user.name || "Unnamed";
-          assignedTo.appendChild(option);
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                alert("⚠️ You are not logged in. Redirecting to login page...");
+                window.location.href = "index.html";
+            }
         });
-      } catch (error) {
-        console.error("Error loading users:", error);
-      }
-    }
 
-    // Cargar proyectos
-    async function loadProjects() {
-      try {
-        const projects = await getAllProjects();
-        projectSelect.innerHTML = "<option value=''>Select Project...</option>";
-        projectTableBody.innerHTML = "";
+        // Cargar usuarios
+        async function loadUsers() {
+            try {
+                const users = await getAllUsers();
+                usersData = users; // Guarda la información de los usuarios
+                assignedTo.innerHTML = "<option value=''>Assign to...</option>";
 
-        projects.forEach(project => {
-          // Llenar el dropdown
-          const option = document.createElement("option");
-          option.value = project.id;
-          option.textContent = project.title;
-          projectSelect.appendChild(option);
+                users.forEach(user => {
+                    const option = document.createElement("option");
+                    option.value = user.id;
+                    option.textContent = user.name || "Unnamed";
+                    assignedTo.appendChild(option);
+                });
+            } catch (error) {
+                console.error("Error loading users:", error);
+            }
+        }
 
-          // Llenar la tabla
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${project.title}</td>
-            <td>${new Date(project.created_at.seconds * 1000).toLocaleDateString()}</td>
-          `;
-          projectTableBody.appendChild(row);
+        // Cargar proyectos
+        async function loadProjects() {
+            try {
+                const projects = await getAllProjects();
+                projectSelect.innerHTML = "<option value=''>Select Project...</option>";
+                projectTableBody.innerHTML = "";
+
+                projects.forEach(project => {
+                    // Llenar el dropdown
+                    const option = document.createElement("option");
+                    option.value = project.id;
+                    option.textContent = project.title;
+                    projectSelect.appendChild(option);
+
+                    // Llenar la tabla
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${project.title}</td>
+                        <td>${new Date(project.created_at.seconds * 1000).toLocaleDateString()}</td>
+                    `;
+                    projectTableBody.appendChild(row);
+                });
+            } catch (error) {
+                console.error("Error loading projects:", error);
+            }
+        }
+
+        // Crear proyecto
+        document.getElementById("addProjectBtn").addEventListener("click", async () => {
+            const projectTitle = document.getElementById("projectTitle").value.trim();
+
+            if (!projectTitle) {
+                alert("⚠️ Please enter a project title.");
+                return;
+            }
+
+            try {
+                await createProject({ title: projectTitle });
+                alert("✅ Project created.");
+                document.getElementById("projectTitle").value = "";
+                await loadProjects();
+            } catch (error) {
+                console.error("Error creating project:", error);
+                alert("❌ Error creating project.");
+            }
         });
-      } catch (error) {
-        console.error("Error loading projects:", error);
-      }
-    }
 
-    // Crear proyecto
-    document.getElementById("addProjectBtn").addEventListener("click", async () => {
-      const projectTitle = document.getElementById("projectTitle").value.trim();
+        // Crear tarea y enviar correo
+        document.getElementById("addTaskBtn").addEventListener("click", async () => {
+            const title = document.getElementById("taskTitle").value.trim();
+            const assignedUserId = assignedTo.value;
+            const deadline = document.getElementById("deadline").value;
+            const projectId = projectSelect.value;
 
-      if (!projectTitle) {
-        alert("⚠️ Please enter a project title.");
-        return;
-      }
+            if (!title || !assignedUserId || !deadline || !projectId) {
+                alert("⚠️ Please complete all fields including Project.");
+                return;
+            }
 
-      try {
-        await createProject({ title: projectTitle });
-        alert("✅ Project created.");
-        document.getElementById("projectTitle").value = "";
-        await loadProjects();
-      } catch (error) {
-        console.error("Error creating project:", error);
-        alert("❌ Error creating project.");
-      }
-    });
+            try {
+                await createTask(projectId, {
+                    title,
+                    assigned_to: assignedUserId,
+                    date: deadline,
+                    progress: parseInt(document.getElementById("progress").value) || 0,
+                    status: document.getElementById("status").value.toLowerCase().replace(/ /g, "_"),
+                    completed: false,
+                });
+                alert("✅ Task created.");
 
-    // Crear tarea
-    document.getElementById("addTaskBtn").addEventListener("click", async () => {
-      const title = document.getElementById("taskTitle").value.trim();
-      const assignedUserId = assignedTo.value;
-      const deadline = document.getElementById("deadline").value;
-      const progress = parseInt(document.getElementById("progress").value) || 0;
-      const status = document.getElementById("status").value.toLowerCase().replace(/ /g, "_");
-      const projectId = projectSelect.value;
+                // Enviar correo electrónico
+                const assignedUser = usersData.find(user => user.id === assignedUserId);
+                if (assignedUser && assignedUser.email) {
+                    await sendEmail(assignedUser.email, title, deadline);
+                } else {
+                    console.warn("No se encontró el email del usuario asignado.");
+                }
 
-      if (!title || !assignedUserId || !deadline || !projectId) {
-        alert("⚠️ Please complete all fields including Project.");
-        return;
-      }
+                // Limpiar los campos del formulario
+                document.getElementById("taskTitle").value = "";
+                document.getElementById("deadline").value = "";
+                document.getElementById("progress").value = "";
+                document.getElementById("status").value = "Not Started";
 
-      try {
-        await createTask(projectId, {
-          title,
-          assigned_to: assignedUserId,
-          date: deadline,
-          progress,
-          status,
-          completed: false,
+            } catch (error) {
+                console.error("Error creating task:", error);
+                alert("❌ Error sending task email.");
+            }
         });
-        alert("✅ Task created.");
-        document.getElementById("taskTitle").value = "";
-        document.getElementById("deadline").value = "";
-        document.getElementById("progress").value = "";
-        document.getElementById("status").value = "Not Started";
-      } catch (error) {
-        console.error("Error creating task:", error);
-        alert("❌ Error creating task.");
-      }
-    });
 
-    // Al cargar la página
-    document.addEventListener("DOMContentLoaded", () => {
-      loadUsers();
-      loadProjects();
-    });
-  </script>
+        // Al cargar la página
+        document.addEventListener("DOMContentLoaded", () => {
+            loadUsers();
+            loadProjects();
+        });
+    </script>
 
 </body>
 
