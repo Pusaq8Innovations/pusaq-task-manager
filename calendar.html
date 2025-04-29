@@ -24,16 +24,46 @@
         </tr>
       </thead>
       <tbody id="calendarBody">
-        <tr>
-          <td>2025-05-01</td>
-          <td>Sample Task</td>
-          <td>Sample Project</td>
-          <td class="status-In\ Progress">In Progress</td>
-        </tr>
-        <!-- You can manually add more sample rows if needed -->
+        <!-- Tasks will be dynamically loaded here -->
       </tbody>
     </table>
   </div>
+
+  <script src="firebase.js"></script>
+  <script>
+    // Initialize Firebase (ensure firebase.js contains the configuration and initialization code)
+    const db = firebase.firestore();
+
+    // Reference to the tasks collection
+    const tasksRef = db.collection('tasks');
+
+    // Function to fetch and display tasks
+    function loadTasks() {
+      const calendarBody = document.getElementById('calendarBody');
+      calendarBody.innerHTML = ''; // Clear existing rows
+
+      tasksRef.get().then((querySnapshot) => {
+        querySnapshot.forEach((doc) => {
+          const task = doc.data();
+          const row = document.createElement('tr');
+
+          row.innerHTML = `
+            <td>${task.deadline || 'N/A'}</td>
+            <td>${task.name || 'N/A'}</td>
+            <td>${task.project || 'N/A'}</td>
+            <td class="status-${task.status?.replace(/\s+/g, '\\ ')}">${task.status || 'N/A'}</td>
+          `;
+
+          calendarBody.appendChild(row);
+        });
+      }).catch((error) => {
+        console.error('Error fetching tasks:', error);
+      });
+    }
+
+    // Load tasks on page load
+    document.addEventListener('DOMContentLoaded', loadTasks);
+  </script>
 
 </body>
 </html>
