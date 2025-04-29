@@ -159,7 +159,7 @@
 
         const dayCell = document.createElement("div");
         dayCell.className = "day";
-        dayCell.innerHTML = `<div class="date">${day}</div>`;
+        dayCell.innerHTML = `<div class="date" style="color: black;">${day}</div>`;
 
         const filtered = allTasks.filter(task => {
           return task.deadline === dateStr &&
@@ -170,17 +170,17 @@
         filtered.forEach(task => {
           const badge = document.createElement("div");
           badge.className = `badge status-${task.status.replace(/\s/g, "\\ ")}`;
-          badge.innerHTML = `${task.title} <span style="opacity:0.7;">(${task.assignedTo})</span>`;
+          badge.innerHTML = `<span style="color: black;">${task.title} <span style="opacity:0.7;">(${task.assignedTo})</span></span>`;
 
           const tooltip = document.createElement("div");
           tooltip.className = "tooltip";
           tooltip.innerHTML = `
-        <strong>${task.title}</strong><br>
-        👤 ${task.assignedTo}<br>
-        📁 ${task.project}<br>
-        🗓️ ${task.deadline}<br>
-        🏷️ ${task.status}<br>
-        ✏️ ${task.note || "No note"}
+      <strong>${task.title}</strong><br>
+      👤 ${task.assignedTo}<br>
+      📁 ${task.project}<br>
+      🗓️ ${task.deadline}<br>
+      🏷️ ${task.status}<br>
+      ✏️ ${task.note || "No note"}
       `;
           badge.appendChild(tooltip);
           dayCell.appendChild(badge);
@@ -191,11 +191,11 @@
     }
 
     // Agregar los manejadores de eventos para los botones de cambio de mes
-    document.getElementById("prevMonthBtn").addEventListener("click", function() {
+    document.getElementById("prevMonthBtn").addEventListener("click", function () {
       changeMonth(-1);
     });
 
-    document.getElementById("nextMonthBtn").addEventListener("click", function() {
+    document.getElementById("nextMonthBtn").addEventListener("click", function () {
       changeMonth(1);
     });
 

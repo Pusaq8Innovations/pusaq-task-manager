@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Who's working today? - Pusaq</title>
   <link rel="stylesheet" href="styles/index.css">
-  <link rel="stylesheet" href="styles/index.css">
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
@@ -89,6 +88,7 @@
         // Guardar el UID y nombre en localStorage
         localStorage.setItem("user_uid", authUser.uid);
         localStorage.setItem("user_name", userData.name);
+        localStorage.setItem("user_role", userData.role);
 
         // Mostrar éxito
         await Swal.fire({

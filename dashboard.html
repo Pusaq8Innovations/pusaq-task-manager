@@ -81,11 +81,18 @@
       userTasks.forEach(task => {
         const taskElement = document.createElement("div");
         taskElement.className = "task";
+        taskElement.style.border = "1px solid #ccc";
+        taskElement.style.borderRadius = "8px";
+        taskElement.style.padding = "16px";
+        taskElement.style.marginBottom = "12px";
+        taskElement.style.boxShadow = "0 2px 4px rgba(0, 0, 0, 0.1)";
+        taskElement.style.backgroundColor = "#f9f9f9";
+
         taskElement.innerHTML = `
-          <h3>${task.title}</h3>
-          <p>Status: ${task.status}</p>
-          <p>Progress: ${task.progress}%</p>
-        `;
+        <h3 style="margin: 0 0 8px; color: #333;">${task.title}</h3>
+        <p style="margin: 4px 0; color: #666;">Status: ${task.status}</p>
+        <p style="margin: 4px 0; color: #666;">Progress: ${task.progress}%</p>
+      `;
         container.appendChild(taskElement);
       });
     }

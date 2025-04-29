@@ -93,12 +93,12 @@
 
           const tooltip = document.createElement("div");
           tooltip.className = "tooltip";
-          tooltip.innerHTML = `
-            <strong>${task.title}</strong><br>
-            🗓️ ${task.deadline || 'No Date'}<br>
-            🏷️ ${task.status || 'Pending'}<br>
-            ✏️ ${task.note || 'No note'}
-          `;
+            tooltip.innerHTML = `
+            <strong style="color: black;">${task.title}</strong><br>
+            <span style="color: black;">🗓️ ${task.deadline || 'No Date'}</span><br>
+            <span style="color: black;">🏷️ ${task.status || 'Pending'}</span><br>
+            <span style="color: black;">✏️ ${task.note || 'No note'}</span>
+            `;
           badge.appendChild(tooltip);
           dayCell.appendChild(badge);
         });
